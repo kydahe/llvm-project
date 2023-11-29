@@ -61,6 +61,13 @@ def SPIRV_BitcastOp : SPIRV_Op<"Bitcast", [Pure]> {
     component of S (mapping to multiple components of L) maps its lower-
     ordered bits to the lower-numbered components of L.
 
+    <!-- End of AutoGen section -->
+
+    ```
+    bitcast-op ::= ssa-id `=` `spirv.Bitcast` ssa-use
+                   `:` operand-type `to` result-type
+    ```
+
     #### Example:
 
     ```mlir
@@ -98,7 +105,14 @@ def SPIRV_ConvertFToSOp : SPIRV_CastOp<"ConvertFToS", SPIRV_Integer, SPIRV_Float
     Float Value must be a scalar or vector of floating-point type.  It must
     have the same number of components as Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    convert-f-to-s-op ::= ssa-id `=` `spirv.ConvertFToSOp` ssa-use
+                          `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -124,7 +138,14 @@ def SPIRV_ConvertFToUOp : SPIRV_CastOp<"ConvertFToU", SPIRV_Integer, SPIRV_Float
     Float Value must be a scalar or vector of floating-point type.  It must
     have the same number of components as Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    convert-f-to-u-op ::= ssa-id `=` `spirv.ConvertFToUOp` ssa-use
+                          `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -151,7 +172,14 @@ def SPIRV_ConvertSToFOp : SPIRV_CastOp<"ConvertSToF",
     Signed Value must be a scalar or vector of integer type.  It must have
     the same number of components as Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    convert-s-to-f-op ::= ssa-id `=` `spirv.ConvertSToFOp` ssa-use
+                          `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -178,7 +206,14 @@ def SPIRV_ConvertUToFOp : SPIRV_CastOp<"ConvertUToF",
     Unsigned Value must be a scalar or vector of integer type.  It must have
     the same number of components as Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    convert-u-to-f-op ::= ssa-id `=` `spirv.ConvertUToFOp` ssa-use
+                          `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -207,7 +242,14 @@ def SPIRV_FConvertOp : SPIRV_CastOp<"FConvert",
     have the same number of components as Result Type.  The component width
     cannot equal the component width in Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    f-convert-op ::= ssa-id `=` `spirv.FConvertOp` ssa-use
+                     `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -235,7 +277,14 @@ def SPIRV_SConvertOp : SPIRV_CastOp<"SConvert",
     the same number of components as Result Type.  The component width
     cannot equal the component width in Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    s-convert-op ::= ssa-id `=` `spirv.SConvertOp` ssa-use
+                     `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -264,7 +313,14 @@ def SPIRV_UConvertOp : SPIRV_CastOp<"UConvert",
     the same number of components as Result Type.  The component width
     cannot equal the component width in Result Type.
 
-    Results are computed per component.
+     Results are computed per component.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    u-convert-op ::= ssa-id `=` `spirv.UConvertOp` ssa-use
+                 `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -292,6 +348,13 @@ def SPIRV_ConvertPtrToUOp : SPIRV_Op<"ConvertPtrToU", []> {
     the conversion truncates Pointer.
 
     For same bit width Pointer and Result Type, this is the same as OpBitcast.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    ptr-to-u-convert-op ::= ssa-id `=` `spirv.ConvertPtrToUOp` ssa-use
+                 `:` operand-type `to` result-type
+    ```
 
     #### Example:
 
@@ -341,6 +404,13 @@ def SPIRV_ConvertUToPtrOp : SPIRV_Op<"ConvertUToPtr", [UnsignedOp]> {
     the conversion truncates Integer Value.
 
     For same-width Integer Value and Result Type, this is the same as OpBitcast.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    u-to-ptr-convert-op ::= ssa-id `=` `spirv.ConvertUToPtr` ssa-use
+                 `:` operand-type `to` result-type
+    ```
 
     #### Example:
 

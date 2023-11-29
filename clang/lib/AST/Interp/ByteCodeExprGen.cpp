@@ -75,7 +75,7 @@ private:
 
 template <class Emitter>
 bool ByteCodeExprGen<Emitter>::VisitCastExpr(const CastExpr *CE) {
-  const Expr *SubExpr = CE->getSubExpr();
+  auto *SubExpr = CE->getSubExpr();
   switch (CE->getCastKind()) {
 
   case CK_LValueToRValue: {

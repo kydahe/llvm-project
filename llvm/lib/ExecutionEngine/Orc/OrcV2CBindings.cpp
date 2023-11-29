@@ -27,6 +27,42 @@ class InProgressLookupState;
 
 class OrcV2CAPIHelper {
 public:
+  using PoolEntry = SymbolStringPtr::PoolEntry;
+  using PoolEntryPtr = SymbolStringPtr::PoolEntryPtr;
+
+  // Move from SymbolStringPtr to PoolEntryPtr (no change in ref count).
+  static PoolEntryPtr moveFromSymbolStringPtr(SymbolStringPtr S) {
+    PoolEntryPtr Result = nullptr;
+    std::swap(Result, S.S);
+    return Result;
+  }
+
+  // Move from a PoolEntryPtr to a SymbolStringPtr (no change in ref count).
+  static SymbolStringPtr moveToSymbolStringPtr(PoolEntryPtr P) {
+    SymbolStringPtr S;
+    S.S = P;
+    return S;
+  }
+
+  // Copy a pool entry to a SymbolStringPtr (increments ref count).
+  static SymbolStringPtr copyToSymbolStringPtr(PoolEntryPtr P) {
+    return SymbolStringPtr(P);
+  }
+
+  static PoolEntryPtr getRawPoolEntryPtr(const SymbolStringPtr &S) {
+    return S.S;
+  }
+
+  static void retainPoolEntry(PoolEntryPtr P) {
+    SymbolStringPtr S(P);
+    S.S = nullptr;
+  }
+
+  static void releasePoolEntry(PoolEntryPtr P) {
+    SymbolStringPtr S;
+    S.S = P;
+  }
+
   static InProgressLookupState *extractLookupState(LookupState &LS) {
     return LS.IPLS.release();
   }
@@ -39,16 +75,10 @@ public:
 } // namespace orc
 } // namespace llvm
 
-inline LLVMOrcSymbolStringPoolEntryRef wrap(SymbolStringPoolEntryUnsafe E) {
-  return reinterpret_cast<LLVMOrcSymbolStringPoolEntryRef>(E.rawPtr());
-}
-
-inline SymbolStringPoolEntryUnsafe unwrap(LLVMOrcSymbolStringPoolEntryRef E) {
-  return reinterpret_cast<SymbolStringPoolEntryUnsafe::PoolEntry *>(E);
-}
-
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ExecutionSession, LLVMOrcExecutionSessionRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(SymbolStringPool, LLVMOrcSymbolStringPoolRef)
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(OrcV2CAPIHelper::PoolEntry,
+                                   LLVMOrcSymbolStringPoolEntryRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(MaterializationUnit,
                                    LLVMOrcMaterializationUnitRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(MaterializationResponsibility,
@@ -106,7 +136,7 @@ public:
 
 private:
   void discard(const JITDylib &JD, const SymbolStringPtr &Name) override {
-    Discard(Ctx, wrap(&JD), wrap(SymbolStringPoolEntryUnsafe::from(Name)));
+    Discard(Ctx, wrap(&JD), wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(Name)));
   }
 
   std::string Name;
@@ -154,7 +184,7 @@ static SymbolMap toSymbolMap(LLVMOrcCSymbolMapPairs Syms, size_t NumPairs) {
   SymbolMap SM;
   for (size_t I = 0; I != NumPairs; ++I) {
     JITSymbolFlags Flags = toJITSymbolFlags(Syms[I].Sym.Flags);
-    SM[unwrap(Syms[I].Name).moveToSymbolStringPtr()] = {
+    SM[OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Syms[I].Name))] = {
         ExecutorAddr(Syms[I].Sym.Address), Flags};
   }
   return SM;
@@ -169,7 +199,7 @@ toSymbolDependenceMap(LLVMOrcCDependenceMapPairs Pairs, size_t NumPairs) {
 
     for (size_t J = 0; J != Pairs[I].Names.Length; ++J) {
       auto Sym = Pairs[I].Names.Symbols[J];
-      Names.insert(unwrap(Sym).moveToSymbolStringPtr());
+      Names.insert(OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Sym)));
     }
     SDM[JD] = Names;
   }
@@ -279,7 +309,7 @@ public:
     CLookupSet.reserve(LookupSet.size());
     for (auto &KV : LookupSet) {
       LLVMOrcSymbolStringPoolEntryRef Name =
-          ::wrap(SymbolStringPoolEntryUnsafe::from(KV.first));
+          ::wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(KV.first));
       LLVMOrcSymbolLookupFlags SLF = fromSymbolLookupFlags(KV.second);
       CLookupSet.push_back({Name, SLF});
     }
@@ -323,7 +353,8 @@ void LLVMOrcSymbolStringPoolClearDeadEntries(LLVMOrcSymbolStringPoolRef SSP) {
 
 LLVMOrcSymbolStringPoolEntryRef
 LLVMOrcExecutionSessionIntern(LLVMOrcExecutionSessionRef ES, const char *Name) {
-  return wrap(SymbolStringPoolEntryUnsafe::take(unwrap(ES)->intern(Name)));
+  return wrap(
+      OrcV2CAPIHelper::moveFromSymbolStringPtr(unwrap(ES)->intern(Name)));
 }
 
 void LLVMOrcExecutionSessionLookup(
@@ -343,7 +374,7 @@ void LLVMOrcExecutionSessionLookup(
 
   SymbolLookupSet SLS;
   for (size_t I = 0; I != SymbolsSize; ++I)
-    SLS.add(unwrap(Symbols[I].Name).moveToSymbolStringPtr(),
+    SLS.add(OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Symbols[I].Name)),
             toSymbolLookupFlags(Symbols[I].LookupFlags));
 
   unwrap(ES)->lookup(
@@ -353,7 +384,7 @@ void LLVMOrcExecutionSessionLookup(
           SmallVector<LLVMOrcCSymbolMapPair> CResult;
           for (auto &KV : *Result)
             CResult.push_back(LLVMOrcCSymbolMapPair{
-                wrap(SymbolStringPoolEntryUnsafe::from(KV.first)),
+                wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(KV.first)),
                 fromExecutorSymbolDef(KV.second)});
           HandleResult(LLVMErrorSuccess, CResult.data(), CResult.size(), Ctx);
         } else
@@ -363,15 +394,15 @@ void LLVMOrcExecutionSessionLookup(
 }
 
 void LLVMOrcRetainSymbolStringPoolEntry(LLVMOrcSymbolStringPoolEntryRef S) {
-  unwrap(S).retain();
+  OrcV2CAPIHelper::retainPoolEntry(unwrap(S));
 }
 
 void LLVMOrcReleaseSymbolStringPoolEntry(LLVMOrcSymbolStringPoolEntryRef S) {
-  unwrap(S).release();
+  OrcV2CAPIHelper::releasePoolEntry(unwrap(S));
 }
 
 const char *LLVMOrcSymbolStringPoolEntryStr(LLVMOrcSymbolStringPoolEntryRef S) {
-  return unwrap(S).rawPtr()->getKey().data();
+  return unwrap(S)->getKey().data();
 }
 
 LLVMOrcResourceTrackerRef
@@ -421,10 +452,10 @@ LLVMOrcMaterializationUnitRef LLVMOrcCreateCustomMaterializationUnit(
     LLVMOrcMaterializationUnitDestroyFunction Destroy) {
   SymbolFlagsMap SFM;
   for (size_t I = 0; I != NumSyms; ++I)
-    SFM[unwrap(Syms[I].Name).moveToSymbolStringPtr()] =
+    SFM[OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Syms[I].Name))] =
         toJITSymbolFlags(Syms[I].Flags);
 
-  auto IS = unwrap(InitSym).moveToSymbolStringPtr();
+  auto IS = OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(InitSym));
 
   return wrap(new OrcCAPIMaterializationUnit(
       Name, std::move(SFM), std::move(IS), Ctx, Materialize, Discard, Destroy));
@@ -445,8 +476,9 @@ LLVMOrcMaterializationUnitRef LLVMOrcLazyReexports(
   for (size_t I = 0; I != NumPairs; ++I) {
     auto pair = CallableAliases[I];
     JITSymbolFlags Flags = toJITSymbolFlags(pair.Entry.Flags);
-    SymbolStringPtr Name = unwrap(pair.Entry.Name).moveToSymbolStringPtr();
-    SAM[unwrap(pair.Name).moveToSymbolStringPtr()] =
+    SymbolStringPtr Name =
+        OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(pair.Entry.Name));
+    SAM[OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(pair.Name))] =
         SymbolAliasMapEntry(Name, Flags);
   }
 
@@ -479,7 +511,7 @@ LLVMOrcCSymbolFlagsMapPairs LLVMOrcMaterializationResponsibilityGetSymbols(
       safe_malloc(Symbols.size() * sizeof(LLVMOrcCSymbolFlagsMapPair)));
   size_t I = 0;
   for (auto const &pair : Symbols) {
-    auto Name = wrap(SymbolStringPoolEntryUnsafe::from(pair.first));
+    auto Name = wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(pair.first));
     auto Flags = pair.second;
     Result[I] = {Name, fromJITSymbolFlags(Flags)};
     I++;
@@ -496,7 +528,7 @@ LLVMOrcSymbolStringPoolEntryRef
 LLVMOrcMaterializationResponsibilityGetInitializerSymbol(
     LLVMOrcMaterializationResponsibilityRef MR) {
   auto Sym = unwrap(MR)->getInitializerSymbol();
-  return wrap(SymbolStringPoolEntryUnsafe::from(Sym));
+  return wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(Sym));
 }
 
 LLVMOrcSymbolStringPoolEntryRef *
@@ -509,7 +541,7 @@ LLVMOrcMaterializationResponsibilityGetRequestedSymbols(
           Symbols.size() * sizeof(LLVMOrcSymbolStringPoolEntryRef)));
   size_t I = 0;
   for (auto &Name : Symbols) {
-    Result[I] = wrap(SymbolStringPoolEntryUnsafe::from(Name));
+    Result[I] = wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(Name));
     I++;
   }
   *NumSymbols = Symbols.size();
@@ -537,7 +569,7 @@ LLVMErrorRef LLVMOrcMaterializationResponsibilityDefineMaterializing(
     LLVMOrcCSymbolFlagsMapPairs Syms, size_t NumSyms) {
   SymbolFlagsMap SFM;
   for (size_t I = 0; I != NumSyms; ++I)
-    SFM[unwrap(Syms[I].Name).moveToSymbolStringPtr()] =
+    SFM[OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Syms[I].Name))] =
         toJITSymbolFlags(Syms[I].Flags);
 
   return wrap(unwrap(MR)->defineMaterializing(std::move(SFM)));
@@ -556,7 +588,7 @@ LLVMErrorRef LLVMOrcMaterializationResponsibilityDelegate(
     LLVMOrcMaterializationResponsibilityRef *Result) {
   SymbolNameSet Syms;
   for (size_t I = 0; I != NumSymbols; I++) {
-    Syms.insert(unwrap(Symbols[I]).moveToSymbolStringPtr());
+    Syms.insert(OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Symbols[I])));
   }
   auto OtherMR = unwrap(MR)->delegate(Syms);
 
@@ -573,7 +605,7 @@ void LLVMOrcMaterializationResponsibilityAddDependencies(
     LLVMOrcCDependenceMapPairs Dependencies, size_t NumPairs) {
 
   SymbolDependenceMap SDM = toSymbolDependenceMap(Dependencies, NumPairs);
-  auto Sym = unwrap(Name).moveToSymbolStringPtr();
+  auto Sym = OrcV2CAPIHelper::moveToSymbolStringPtr(unwrap(Name));
   unwrap(MR)->addDependencies(Sym, SDM);
 }
 
@@ -666,7 +698,7 @@ LLVMErrorRef LLVMOrcCreateDynamicLibrarySearchGeneratorForProcess(
   DynamicLibrarySearchGenerator::SymbolPredicate Pred;
   if (Filter)
     Pred = [=](const SymbolStringPtr &Name) -> bool {
-      return Filter(FilterCtx, wrap(SymbolStringPoolEntryUnsafe::from(Name)));
+      return Filter(FilterCtx, wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(Name)));
     };
 
   auto ProcessSymsGenerator =
@@ -692,7 +724,7 @@ LLVMErrorRef LLVMOrcCreateDynamicLibrarySearchGeneratorForPath(
   DynamicLibrarySearchGenerator::SymbolPredicate Pred;
   if (Filter)
     Pred = [=](const SymbolStringPtr &Name) -> bool {
-      return Filter(FilterCtx, wrap(SymbolStringPoolEntryUnsafe::from(Name)));
+      return Filter(FilterCtx, wrap(OrcV2CAPIHelper::getRawPoolEntryPtr(Name)));
     };
 
   auto LibrarySymsGenerator =
@@ -960,7 +992,7 @@ char LLVMOrcLLJITGetGlobalPrefix(LLVMOrcLLJITRef J) {
 
 LLVMOrcSymbolStringPoolEntryRef
 LLVMOrcLLJITMangleAndIntern(LLVMOrcLLJITRef J, const char *UnmangledName) {
-  return wrap(SymbolStringPoolEntryUnsafe::take(
+  return wrap(OrcV2CAPIHelper::moveFromSymbolStringPtr(
       unwrap(J)->mangleAndIntern(UnmangledName)));
 }
 

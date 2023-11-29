@@ -1,10 +1,7 @@
-#include <filesystem>
-
 #include "GenerateInput.h"
 #include "benchmark/benchmark.h"
+#include "filesystem_include.h"
 #include "test_iterators.h"
-
-namespace fs = std::filesystem;
 
 static const size_t TestNumInputs = 1024;
 

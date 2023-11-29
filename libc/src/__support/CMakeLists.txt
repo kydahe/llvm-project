@@ -32,7 +32,6 @@ add_header_library(
     bit.h
   DEPENDS
     libc.src.__support.macros.attributes
-    libc.src.__support.CPP.type_traits
 )
 
 add_header_library(
@@ -231,28 +230,6 @@ add_header_library(
     libc.src.__support.OSUtil.osutil
 )
 
-add_header_library(
-  hash
-  HDRS
-    hash.h
-  DEPENDS
-    .bit
-    .uint128
-    libc.src.__support.macros.attributes
-)
-
-add_header_library(
-  memory_size
-  HDRS
-    memory_size.h
-  DEPENDS
-    libc.src.__support.CPP.type_traits
-    libc.src.__support.CPP.limits
-    libc.src.__support.macros.optimization
-    libc.src.__support.macros.attributes
-    libc.src.__support.macros.config
-)
-
 add_subdirectory(FPUtil)
 add_subdirectory(OSUtil)
 add_subdirectory(StringUtil)
@@ -264,5 +241,3 @@ add_subdirectory(RPC)
 add_subdirectory(threads)
 
 add_subdirectory(File)
-
-add_subdirectory(HashTable)

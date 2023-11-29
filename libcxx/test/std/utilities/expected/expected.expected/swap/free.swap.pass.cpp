@@ -31,16 +31,16 @@ static_assert(!std::is_swappable_v<std::expected<NotSwappable, int>>);
 // !is_swappable_v<E>
 static_assert(!std::is_swappable_v<std::expected<int, NotSwappable>>);
 
-struct NotMoveConstructible {
-  NotMoveConstructible(NotMoveConstructible&&) = delete;
-  friend void swap(NotMoveConstructible&, NotMoveConstructible&) {}
+struct NotMoveContructible {
+  NotMoveContructible(NotMoveContructible&&) = delete;
+  friend void swap(NotMoveContructible&, NotMoveContructible&) {}
 };
 
 // !is_move_constructible_v<T>
-static_assert(!std::is_swappable_v<std::expected<NotMoveConstructible, int>>);
+static_assert(!std::is_swappable_v<std::expected<NotMoveContructible, int>>);
 
 // !is_move_constructible_v<E>
-static_assert(!std::is_swappable_v<std::expected<int, NotMoveConstructible>>);
+static_assert(!std::is_swappable_v<std::expected<int, NotMoveContructible>>);
 
 struct MoveMayThrow {
   MoveMayThrow(MoveMayThrow&&) noexcept(false);

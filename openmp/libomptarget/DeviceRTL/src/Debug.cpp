@@ -10,10 +10,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "Shared/Environment.h"
-
-#include "Configuration.h"
 #include "Debug.h"
+#include "Configuration.h"
+#include "Environment.h"
 #include "Interface.h"
 #include "Mapping.h"
 #include "State.h"

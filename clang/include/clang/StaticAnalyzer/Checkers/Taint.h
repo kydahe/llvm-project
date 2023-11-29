@@ -25,6 +25,22 @@ namespace taint {
 using TaintTagType = unsigned;
 
 static constexpr TaintTagType TaintTagGeneric = 0;
+static constexpr TaintTagType TaintTagCred = 1;
+static constexpr TaintTagType TaintTagRet = 2;
+static constexpr TaintTagType TaintTagCredRet = 3;
+static constexpr TaintTagType TaintTagNone = 4;
+static constexpr TaintTagType TaintTagCredSrcFile = 11;
+static constexpr TaintTagType TaintTagCredSrcEnv = 12;
+static constexpr TaintTagType TaintTagCredSrcOptarg = 13;
+static constexpr TaintTagType TaintTagCredSrcConst = 14;
+static constexpr TaintTagType TaintTagCredSrcOtherInput = 15;
+static constexpr TaintTagType TaintTagCredUsageCryptoMisuse = 21;
+static constexpr TaintTagType TaintTagCredUsageReplay = 22;
+// static constexpr TaintTagType TaintTagCredCleanNoMemset = 18;
+static constexpr TaintTagType TaintTagCredMemset = 31;
+static constexpr TaintTagType TaintTagCredMemsetRet = 32;
+static constexpr TaintTagType TaintTagCredFree = 33;
+static constexpr TaintTagType TaintTagCredFreeRet = 34;
 
 /// Create a new state in which the value of the statement is marked as tainted.
 [[nodiscard]] ProgramStateRef addTaint(ProgramStateRef State, const Stmt *S,
@@ -120,7 +136,29 @@ std::vector<SymbolRef> getTaintedSymbolsImpl(ProgramStateRef State,
 void printTaint(ProgramStateRef State, raw_ostream &Out, const char *nl = "\n",
                 const char *sep = "");
 
+void removeDupTag(std::vector<TaintTagType> &v);
+
 LLVM_DUMP_METHOD void dumpTaint(ProgramStateRef State);
+
+llvm::ImmutableMap<SymbolRef, llvm::ImmutableSet<TaintTagType>> getSymTaints(ProgramStateRef State);
+llvm::ImmutableMap<const ElementRegion *, llvm::ImmutableSet<TaintTagType>> getElementTaints(ProgramStateRef State);
+
+/// The bug visitor prints a diagnostic message at the location where a given
+/// variable was tainted.
+class TaintBugVisitor final : public BugReporterVisitor {
+private:
+  const SVal V;
+
+public:
+  TaintBugVisitor(const SVal V) : V(V) {}
+  void Profile(llvm::FoldingSetNodeID &ID) const override { ID.Add(V); }
+
+  PathDiagnosticPieceRef VisitNode(const ExplodedNode *N,
+                                   BugReporterContext &BRC,
+                                   PathSensitiveBugReport &BR) override;
+};
+
+
 } // namespace taint
 } // namespace ento
 } // namespace clang

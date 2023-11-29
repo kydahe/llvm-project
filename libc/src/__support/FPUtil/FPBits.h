@@ -13,7 +13,6 @@
 #include "src/__support/CPP/type_traits.h"
 #include "src/__support/bit.h"
 #include "src/__support/common.h"
-#include "src/__support/macros/attributes.h" // LIBC_INLINE
 
 #include "FloatProperties.h"
 #include <stdint.h>
@@ -107,14 +106,13 @@ template <typename T> struct FPBits {
   // We don't want accidental type promotions/conversions, so we require exact
   // type match.
   template <typename XType, cpp::enable_if_t<cpp::is_same_v<T, XType>, int> = 0>
-  LIBC_INLINE constexpr explicit FPBits(XType x)
-      : bits(cpp::bit_cast<UIntType>(x)) {}
+  constexpr explicit FPBits(XType x) : bits(cpp::bit_cast<UIntType>(x)) {}
 
   template <typename XType,
             cpp::enable_if_t<cpp::is_same_v<XType, UIntType>, int> = 0>
-  LIBC_INLINE constexpr explicit FPBits(XType x) : bits(x) {}
+  constexpr explicit FPBits(XType x) : bits(x) {}
 
-  LIBC_INLINE constexpr FPBits() : bits(0) {}
+  constexpr FPBits() : bits(0) {}
 
   LIBC_INLINE constexpr T get_val() const { return cpp::bit_cast<T>(bits); }
 

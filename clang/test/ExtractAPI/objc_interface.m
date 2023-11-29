@@ -468,10 +468,6 @@
         {
           "kind": "identifier",
           "spelling": "Property"
-        },
-        {
-          "kind": "text",
-          "spelling": ";"
         }
       ],
       "identifier": {

@@ -13,9 +13,7 @@
 namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(float, nexttowardf, (float x, long double y)) {
-  // We can reuse the nextafter implementation because the internal nextafter is
-  // templated on the types of the arguments.
-  return fputil::nextafter(x, y);
+  return fputil::nexttoward(x, y);
 }
 
 } // namespace LIBC_NAMESPACE

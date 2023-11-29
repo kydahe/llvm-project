@@ -18,10 +18,9 @@
 #include <cstring>
 #include <memory>
 
-#include "Shared/Debug.h"
-
-#include "OpenMP/OMPT/Callback.h"
-#include "OpenMP/OMPT/Connector.h"
+#include "Debug.h"
+#include "OmptCallback.h"
+#include "OmptConnector.h"
 
 using namespace llvm::omp::target::ompt;
 

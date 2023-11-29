@@ -15,6 +15,8 @@ output (if the underlying baremetal enviroment supports QEMU semihosting).
 
 import argparse
 import os
+import platform
+import subprocess
 import sys
 
 

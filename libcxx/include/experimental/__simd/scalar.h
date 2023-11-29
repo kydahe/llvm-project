@@ -11,9 +11,7 @@
 #define _LIBCPP_EXPERIMENTAL___SIMD_SCALAR_H
 
 #include <cstddef>
-#include <experimental/__config>
 #include <experimental/__simd/internal_declaration.h>
-#include <experimental/__simd/traits.h>
 
 #if _LIBCPP_STD_VER >= 17 && defined(_LIBCPP_ENABLE_EXPERIMENTAL)
 
@@ -24,9 +22,6 @@ struct __scalar {
   static constexpr size_t __simd_size = 1;
 };
 } // namespace simd_abi
-
-template <>
-inline constexpr bool is_abi_tag_v<simd_abi::__scalar> = true;
 
 template <class _Tp>
 struct __simd_storage<_Tp, simd_abi::__scalar> {

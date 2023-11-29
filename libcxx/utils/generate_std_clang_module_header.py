@@ -6,6 +6,7 @@
 #
 # ===----------------------------------------------------------------------===##
 
+import operator
 import os.path
 
 import libcxx.header_information

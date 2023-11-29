@@ -5,15 +5,6 @@
 ! RUN: %t/runtest.sh %t %flang $t/ffile.f90 $t/cfile.c
 
 !--- ffile.f90
-program fmain
-  interface
-    subroutine csub() bind(c)
-    end subroutine
-  end interface
-
-  call csub()
-end program fmain
-
 subroutine foo(a) bind(c)
   integer :: a(:)
   if (lbound(a, 1) .ne. 1) then
@@ -46,7 +37,7 @@ void foo(CFI_cdesc_t*);
 
 int a[10];
 
-void csub() {
+int main() {
   int i, res;
   static CFI_CDESC_T(1) r1;
   CFI_cdesc_t *desc = (CFI_cdesc_t*)&r1;
@@ -64,7 +55,7 @@ void csub() {
   }
 
   foo(desc);
-  return;
+  return 0;
 }
 !--- runtest.sh
 #!/bin/bash

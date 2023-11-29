@@ -14,7 +14,6 @@
 #include "flang/Optimizer/Builder/DoLoopHelper.h"
 #include "flang/Optimizer/Builder/FIRBuilder.h"
 #include "flang/Optimizer/Builder/Todo.h"
-#include "flang/Optimizer/Dialect/FIROpsSupport.h"
 #include "llvm/Support/Debug.h"
 #include <optional>
 

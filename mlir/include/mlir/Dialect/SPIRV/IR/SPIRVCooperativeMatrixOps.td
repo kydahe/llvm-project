@@ -32,6 +32,11 @@ def SPIRV_KHRCooperativeMatrixLengthOp :
 
     The type attribute must be a cooperative matrix type.
 
+    ``` {.ebnf}
+    cooperative-matrix-length-op ::= ssa-id `=` `spirv.KHR.CooperativeMatrixLength
+                                    ` : ` cooperative-matrix-type
+    ```
+
     #### Example:
 
     ```
@@ -94,6 +99,14 @@ def SPIRV_KHRCooperativeMatrixLoadOp : SPIRV_KhrVendorOp<"CooperativeMatrixLoad"
     (where the scope is the scope the cooperative matrix type was created with).
     All invocations in a given scope instance must be active or all must be
     inactive.
+
+    ``` {.ebnf}
+    cooperative-matrix-load-op ::= ssa-id `=` `spirv.KHR.CooperativeMatrixLoad`
+                              ssa-use `,` ssa-use `,`
+                              `<` cooperative-matrix-layout `>`
+                              (`,` `<` memory-operand `>`)? `:`
+                                pointer-type `,` stride-type `->` cooperative-matrix-type
+    ```
 
     TODO: In the SPIR-V spec, `stride` is an optional argument. We should also
     support this optionality in the SPIR-V dialect.
@@ -178,6 +191,14 @@ def SPIRV_KHRCooperativeMatrixStoreOp : SPIRV_KhrVendorOp<"CooperativeMatrixStor
     (where the scope is the scope the cooperative matrix type was created with).
     All invocations in a given scope instance must be active or all must be
     inactive.
+
+    ``` {.ebnf}
+     coop-matrix-store-op ::= `spirv.KHR.CooperativeMatrixStore`
+                              ssa-use `,` ssa-use `,`
+                              ssa-use `,` `<` cooperative-matrix-layout `>`
+                              (`,` `<` memory-operand `>`)? `:`
+                              pointer-type `,` coop-matrix-type `,` stride-type
+    ```
 
     TODO: In the SPIR-V spec, `stride` is an optional argument. We should also
     support this optionality in the SPIR-V dialect.
@@ -356,7 +377,12 @@ def SPIRV_NVCooperativeMatrixLengthOp : SPIRV_NvVendorOp<"CooperativeMatrixLengt
 
     Type is a cooperative matrix type.
 
-    #### Example:
+    ``` {.ebnf}
+    cooperative-matrix-length-op ::= ssa-id `=` `spirv.NV.CooperativeMatrixLength
+                                    ` : ` cooperative-matrix-type
+    ```
+
+    For example:
 
     ```
     %0 = spirv.NV.CooperativeMatrixLength : !spirv.NV.coopmatrix<8x16xi32, Subgroup>
@@ -430,7 +456,7 @@ def SPIRV_NVCooperativeMatrixLoadOp : SPIRV_NvVendorOp<"CooperativeMatrixLoad", 
                               cooperative-matrix-type
     ```
 
-    #### Example:
+    For example:
 
     ```
     %0 = spirv.NV.CooperativeMatrixLoad %ptr, %stride, %colMajor
@@ -494,7 +520,14 @@ def SPIRV_NVCooperativeMatrixMulAddOp : SPIRV_NvVendorOp<"CooperativeMatrixMulAd
     scope instance must be active or all must be inactive (where the scope is
     the scope of the operation).
 
-    #### Example:
+    ``` {.ebnf}
+    cooperative-matrixmuladd-op ::= ssa-id `=` `spirv.NV.CooperativeMatrixMulAdd`
+                              ssa-use `,` ssa-use `,` ssa-use ` : `
+                              a-cooperative-matrix-type,
+                              b-cooperative-matrix-type ->
+                              result-cooperative-matrix-type
+    ```
+    For example:
 
     ```
     %0 = spirv.NV.CooperativeMatrixMulAdd %arg0, %arg1, %arg2,  :
@@ -559,7 +592,7 @@ def SPIRV_NVCooperativeMatrixStoreOp : SPIRV_NvVendorOp<"CooperativeMatrixStore"
                               pointer-type `,` coop-matrix-type
     ```
 
-    #### Example:
+    For example:
 
     ```
       spirv.NV.CooperativeMatrixStore %arg0, %arg2, %arg1, %arg3 :

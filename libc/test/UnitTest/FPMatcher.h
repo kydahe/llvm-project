@@ -143,8 +143,7 @@ template <typename T> struct FPTest : public Test {
 #define EXPECT_FP_EXCEPTION(expected)                                          \
   do {                                                                         \
     if (math_errhandling & MATH_ERREXCEPT) {                                   \
-      EXPECT_GE(LIBC_NAMESPACE::fputil::test_except(FE_ALL_EXCEPT) &           \
-                    (expected),                                                \
+      EXPECT_GE(LIBC_NAMESPACE::fputil::test_except(FE_ALL_EXCEPT) & expected, \
                 expected);                                                     \
     }                                                                          \
   } while (0)
@@ -152,8 +151,7 @@ template <typename T> struct FPTest : public Test {
 #define ASSERT_FP_EXCEPTION(expected)                                          \
   do {                                                                         \
     if (math_errhandling & MATH_ERREXCEPT) {                                   \
-      ASSERT_GE(LIBC_NAMESPACE::fputil::test_except(FE_ALL_EXCEPT) &           \
-                    (expected),                                                \
+      ASSERT_GE(LIBC_NAMESPACE::fputil::test_except(FE_ALL_EXCEPT) & expected, \
                 expected);                                                     \
     }                                                                          \
   } while (0)
@@ -164,7 +162,7 @@ template <typename T> struct FPTest : public Test {
     EXPECT_FP_EQ(expected_val, actual_val);                                    \
     if (math_errhandling & MATH_ERREXCEPT) {                                   \
       EXPECT_GE(LIBC_NAMESPACE::fputil::test_except(FE_ALL_EXCEPT) &           \
-                    (expected_except),                                         \
+                    expected_except,                                           \
                 expected_except);                                              \
       LIBC_NAMESPACE::fputil::clear_except(FE_ALL_EXCEPT);                     \
     }                                                                          \
@@ -176,7 +174,7 @@ template <typename T> struct FPTest : public Test {
     EXPECT_FP_IS_NAN(actual_val);                                              \
     if (math_errhandling & MATH_ERREXCEPT) {                                   \
       EXPECT_GE(LIBC_NAMESPACE::fputil::test_except(FE_ALL_EXCEPT) &           \
-                    (expected_except),                                         \
+                    expected_except,                                           \
                 expected_except);                                              \
       LIBC_NAMESPACE::fputil::clear_except(FE_ALL_EXCEPT);                     \
     }                                                                          \

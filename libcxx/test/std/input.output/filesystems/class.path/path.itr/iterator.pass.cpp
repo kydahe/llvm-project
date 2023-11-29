@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14
+// UNSUPPORTED: c++03
 // UNSUPPORTED: availability-filesystem-missing
 
 // <filesystem>
@@ -19,13 +19,12 @@
 //      path(InputIterator first, InputIterator last);
 
 
-#include <filesystem>
+#include "filesystem_include.h"
 #include <cassert>
 #include <iterator>
 #include <type_traits>
 
 #include "test_macros.h"
-namespace fs = std::filesystem;
 
 template <class Iter1, class Iter2>
 bool checkCollectionsEqual(

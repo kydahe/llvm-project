@@ -1496,14 +1496,13 @@ public:
   /// to TargetPassConfig::createMachineScheduler() to have an effect.
   ///
   /// \p BaseOps1 and \p BaseOps2 are memory operands of two memory operations.
-  /// \p ClusterSize is the number of operations in the resulting load/store
-  /// cluster if this hook returns true.
+  /// \p NumLoads is the number of loads that will be in the cluster if this
+  /// hook returns true.
   /// \p NumBytes is the number of bytes that will be loaded from all the
   /// clustered loads if this hook returns true.
   virtual bool shouldClusterMemOps(ArrayRef<const MachineOperand *> BaseOps1,
                                    ArrayRef<const MachineOperand *> BaseOps2,
-                                   unsigned ClusterSize,
-                                   unsigned NumBytes) const {
+                                   unsigned NumLoads, unsigned NumBytes) const {
     llvm_unreachable("target did not implement shouldClusterMemOps()");
   }
 
@@ -2194,8 +2193,8 @@ public:
   /// finalize-isel. Example:
   /// INLINEASM ... 262190 /* mem:m */, %stack.0.x.addr, 1, $noreg, 0, $noreg
   /// we would add placeholders for:                     ^  ^       ^  ^
-  virtual void getFrameIndexOperands(SmallVectorImpl<MachineOperand> &Ops,
-                                     int FI) const {
+  virtual void
+  getFrameIndexOperands(SmallVectorImpl<MachineOperand> &Ops) const {
     llvm_unreachable("unknown number of operands necessary");
   }
 

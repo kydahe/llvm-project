@@ -9,8 +9,7 @@
 #ifndef TEST_STD_CONTAINERS_VIEWS_MDSPAN_MINIMAL_ELEMENT_TYPE_H
 #define TEST_STD_CONTAINERS_VIEWS_MDSPAN_MINIMAL_ELEMENT_TYPE_H
 
-#include <memory>
-#include <type_traits>
+#include<memory>
 
 // Idiosyncratic element type for mdspan
 // Make sure we don't assume copyable, default constructible, movable etc.
@@ -26,7 +25,7 @@ struct MinimalElementType {
 template<class T, size_t N>
 struct ElementPool {
   constexpr ElementPool() {
-    ptr_ = std::allocator<std::remove_const_t<T>>().allocate(N);
+    ptr_ = std::allocator<T>().allocate(N);
     for (int i = 0; i != N; ++i)
       std::construct_at(ptr_ + i, 42);
   }
@@ -36,11 +35,11 @@ struct ElementPool {
   constexpr ~ElementPool() {
     for (int i = 0; i != N; ++i)
       std::destroy_at(ptr_ + i);
-    std::allocator<std::remove_const_t<T>>().deallocate(ptr_, N);
+    std::allocator<T>().deallocate(ptr_, N);
   }
 
 private:
-  std::remove_const_t<T>* ptr_;
+  T* ptr_;
 };
 
 #endif // TEST_STD_CONTAINERS_VIEWS_MDSPAN_MINIMAL_ELEMENT_TYPE_H

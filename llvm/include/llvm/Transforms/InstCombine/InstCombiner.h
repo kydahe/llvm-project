@@ -464,12 +464,12 @@ public:
 
   void computeKnownBits(const Value *V, KnownBits &Known, unsigned Depth,
                         const Instruction *CxtI) const {
-    llvm::computeKnownBits(V, Known, Depth, SQ.getWithInstruction(CxtI));
+    llvm::computeKnownBits(V, Known, DL, Depth, &AC, CxtI, &DT);
   }
 
   KnownBits computeKnownBits(const Value *V, unsigned Depth,
                              const Instruction *CxtI) const {
-    return llvm::computeKnownBits(V, Depth, SQ.getWithInstruction(CxtI));
+    return llvm::computeKnownBits(V, DL, Depth, &AC, CxtI, &DT);
   }
 
   bool isKnownToBeAPowerOfTwo(const Value *V, bool OrZero = false,
@@ -480,7 +480,7 @@ public:
 
   bool MaskedValueIsZero(const Value *V, const APInt &Mask, unsigned Depth = 0,
                          const Instruction *CxtI = nullptr) const {
-    return llvm::MaskedValueIsZero(V, Mask, SQ.getWithInstruction(CxtI), Depth);
+    return llvm::MaskedValueIsZero(V, Mask, DL, Depth, &AC, CxtI, &DT);
   }
 
   unsigned ComputeNumSignBits(const Value *Op, unsigned Depth = 0,

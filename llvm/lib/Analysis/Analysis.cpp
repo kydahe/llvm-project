@@ -23,7 +23,12 @@ void llvm::initializeAnalysis(PassRegistry &Registry) {
   initializeBranchProbabilityInfoWrapperPassPass(Registry);
   initializeCallGraphWrapperPassPass(Registry);
   initializeCallGraphDOTPrinterPass(Registry);
+  initializeCallGraphPrinterLegacyPassPass(Registry);
   initializeCallGraphViewerPass(Registry);
+  initializeCFGViewerLegacyPassPass(Registry);
+  initializeCFGPrinterLegacyPassPass(Registry);
+  initializeCFGOnlyViewerLegacyPassPass(Registry);
+  initializeCFGOnlyPrinterLegacyPassPass(Registry);
   initializeCycleInfoWrapperPassPass(Registry);
   initializeDependenceAnalysisWrapperPassPass(Registry);
   initializeDominanceFrontierWrapperPassPass(Registry);
@@ -43,6 +48,7 @@ void llvm::initializeAnalysis(PassRegistry &Registry) {
   initializeLazyBranchProbabilityInfoPassPass(Registry);
   initializeLazyBlockFrequencyInfoPassPass(Registry);
   initializeLazyValueInfoWrapperPassPass(Registry);
+  initializeLazyValueInfoPrinterPass(Registry);
   initializeLoopInfoWrapperPassPass(Registry);
   initializeMemoryDependenceWrapperPassPass(Registry);
   initializeModuleSummaryIndexWrapperPassPass(Registry);

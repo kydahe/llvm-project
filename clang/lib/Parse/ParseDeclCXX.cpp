@@ -1023,7 +1023,7 @@ Decl *Parser::ParseStaticAssertDeclaration(SourceLocation &DeclEnd) {
         const Token &T = GetLookAheadToken(I);
         if (T.is(tok::r_paren))
           break;
-        if (!tokenIsLikeStringLiteral(T, getLangOpts()) || T.hasUDSuffix()) {
+        if (!tokenIsLikeStringLiteral(T, getLangOpts())) {
           ParseAsExpression = true;
           break;
         }

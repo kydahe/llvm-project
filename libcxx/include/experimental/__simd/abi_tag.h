@@ -10,9 +10,8 @@
 #ifndef _LIBCPP_EXPERIMENTAL___SIMD_ABI_TAG_H
 #define _LIBCPP_EXPERIMENTAL___SIMD_ABI_TAG_H
 
-#include <cstddef>
-#include <experimental/__config>
-#include <experimental/__simd/internal_declaration.h>
+#include <experimental/__simd/scalar.h>
+#include <experimental/__simd/vec_ext.h>
 
 #if _LIBCPP_STD_VER >= 17 && defined(_LIBCPP_ENABLE_EXPERIMENTAL)
 

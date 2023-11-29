@@ -135,21 +135,22 @@ String Error Functions
 =============  =========
 Function Name  Available
 =============  =========
-strerror       |check|
-strerror_r     |check|
+strerror
+strerror_s
+strerrorlen_s
 =============  =========
 
 Localized String Functions
 ==========================
 
-These functions require locale.h, and will be finished when locale support is 
+These functions require locale.h, and will be added when locale support is 
 implemented in LLVM-libc.
 
 =============  =========
 Function Name  Available
 =============  =========
-strcoll        Partially
-strxfrm        Partially
+strcoll
+strxfrm
 =============  =========
 
 ---------------------------

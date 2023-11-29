@@ -3233,11 +3233,11 @@ void PragmaOptimizeHandler::HandlePragma(Preprocessor &PP,
 namespace {
 /// Used as the annotation value for tok::annot_pragma_fp.
 struct TokFPAnnotValue {
+  enum FlagKinds { Contract, Reassociate, Exceptions, EvalMethod };
   enum FlagValues { On, Off, Fast };
 
   std::optional<LangOptions::FPModeKind> ContractValue;
   std::optional<LangOptions::FPModeKind> ReassociateValue;
-  std::optional<LangOptions::FPModeKind> ReciprocalValue;
   std::optional<LangOptions::FPExceptionModeKind> ExceptionsValue;
   std::optional<LangOptions::FPEvalMethodKind> EvalMethodValue;
 };
@@ -3261,12 +3261,12 @@ void PragmaFPHandler::HandlePragma(Preprocessor &PP,
     IdentifierInfo *OptionInfo = Tok.getIdentifierInfo();
 
     auto FlagKind =
-        llvm::StringSwitch<std::optional<PragmaFPKind>>(OptionInfo->getName())
-            .Case("contract", PFK_Contract)
-            .Case("reassociate", PFK_Reassociate)
-            .Case("exceptions", PFK_Exceptions)
-            .Case("eval_method", PFK_EvalMethod)
-            .Case("reciprocal", PFK_Reciprocal)
+        llvm::StringSwitch<std::optional<TokFPAnnotValue::FlagKinds>>(
+            OptionInfo->getName())
+            .Case("contract", TokFPAnnotValue::Contract)
+            .Case("reassociate", TokFPAnnotValue::Reassociate)
+            .Case("exceptions", TokFPAnnotValue::Exceptions)
+            .Case("eval_method", TokFPAnnotValue::EvalMethod)
             .Default(std::nullopt);
     if (!FlagKind) {
       PP.Diag(Tok.getLocation(), diag::err_pragma_fp_invalid_option)
@@ -3282,7 +3282,7 @@ void PragmaFPHandler::HandlePragma(Preprocessor &PP,
     }
     PP.Lex(Tok);
     bool isEvalMethodDouble =
-        Tok.is(tok::kw_double) && FlagKind == PFK_EvalMethod;
+        Tok.is(tok::kw_double) && FlagKind == TokFPAnnotValue::EvalMethod;
 
     // Don't diagnose if we have an eval_metod pragma with "double" kind.
     if (Tok.isNot(tok::identifier) && !isEvalMethodDouble) {
@@ -3293,7 +3293,7 @@ void PragmaFPHandler::HandlePragma(Preprocessor &PP,
     }
     const IdentifierInfo *II = Tok.getIdentifierInfo();
 
-    if (FlagKind == PFK_Contract) {
+    if (FlagKind == TokFPAnnotValue::Contract) {
       AnnotValue->ContractValue =
           llvm::StringSwitch<std::optional<LangOptions::FPModeKind>>(
               II->getName())
@@ -3306,20 +3306,19 @@ void PragmaFPHandler::HandlePragma(Preprocessor &PP,
             << PP.getSpelling(Tok) << OptionInfo->getName() << *FlagKind;
         return;
       }
-    } else if (FlagKind == PFK_Reassociate || FlagKind == PFK_Reciprocal) {
-      auto &Value = FlagKind == PFK_Reassociate ? AnnotValue->ReassociateValue
-                                                : AnnotValue->ReciprocalValue;
-      Value = llvm::StringSwitch<std::optional<LangOptions::FPModeKind>>(
-                  II->getName())
-                  .Case("on", LangOptions::FPModeKind::FPM_On)
-                  .Case("off", LangOptions::FPModeKind::FPM_Off)
-                  .Default(std::nullopt);
-      if (!Value) {
+    } else if (FlagKind == TokFPAnnotValue::Reassociate) {
+      AnnotValue->ReassociateValue =
+          llvm::StringSwitch<std::optional<LangOptions::FPModeKind>>(
+              II->getName())
+              .Case("on", LangOptions::FPModeKind::FPM_On)
+              .Case("off", LangOptions::FPModeKind::FPM_Off)
+              .Default(std::nullopt);
+      if (!AnnotValue->ReassociateValue) {
         PP.Diag(Tok.getLocation(), diag::err_pragma_fp_invalid_argument)
             << PP.getSpelling(Tok) << OptionInfo->getName() << *FlagKind;
         return;
       }
-    } else if (FlagKind == PFK_Exceptions) {
+    } else if (FlagKind == TokFPAnnotValue::Exceptions) {
       AnnotValue->ExceptionsValue =
           llvm::StringSwitch<std::optional<LangOptions::FPExceptionModeKind>>(
               II->getName())
@@ -3332,7 +3331,7 @@ void PragmaFPHandler::HandlePragma(Preprocessor &PP,
             << PP.getSpelling(Tok) << OptionInfo->getName() << *FlagKind;
         return;
       }
-    } else if (FlagKind == PFK_EvalMethod) {
+    } else if (FlagKind == TokFPAnnotValue::EvalMethod) {
       AnnotValue->EvalMethodValue =
           llvm::StringSwitch<std::optional<LangOptions::FPEvalMethodKind>>(
               II->getName())
@@ -3438,15 +3437,9 @@ void Parser::HandlePragmaFP() {
       reinterpret_cast<TokFPAnnotValue *>(Tok.getAnnotationValue());
 
   if (AnnotValue->ReassociateValue)
-    Actions.ActOnPragmaFPValueChangingOption(
-        Tok.getLocation(), PFK_Reassociate,
-        *AnnotValue->ReassociateValue == LangOptions::FPModeKind::FPM_On);
-
-  if (AnnotValue->ReciprocalValue)
-    Actions.ActOnPragmaFPValueChangingOption(
-        Tok.getLocation(), PFK_Reciprocal,
-        *AnnotValue->ReciprocalValue == LangOptions::FPModeKind::FPM_On);
-
+    Actions.ActOnPragmaFPReassociate(Tok.getLocation(),
+                                     *AnnotValue->ReassociateValue ==
+                                         LangOptions::FPModeKind::FPM_On);
   if (AnnotValue->ContractValue)
     Actions.ActOnPragmaFPContract(Tok.getLocation(),
                                   *AnnotValue->ContractValue);

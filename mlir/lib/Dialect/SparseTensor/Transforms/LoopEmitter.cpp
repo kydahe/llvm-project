@@ -68,13 +68,15 @@ static constexpr unsigned kSliceIterWidth = 3;
 static Value genSliceOffset(OpBuilder &builder, Location loc, Value tensor,
                             Level lvl) {
   auto enc = getSparseTensorEncoding(tensor.getType());
-  return createOrFoldSliceOffsetOp(builder, loc, tensor, toDim(enc, lvl));
+  // FIXME: `toOrigDim` is deprecated
+  return createOrFoldSliceOffsetOp(builder, loc, tensor, toOrigDim(enc, lvl));
 }
 
 static Value genSliceStride(OpBuilder &builder, Location loc, Value tensor,
                             Level lvl) {
   auto enc = getSparseTensorEncoding(tensor.getType());
-  return createOrFoldSliceStrideOp(builder, loc, tensor, toDim(enc, lvl));
+  // FIXME: `toOrigDim` is deprecated
+  return createOrFoldSliceStrideOp(builder, loc, tensor, toOrigDim(enc, lvl));
 }
 
 /// Converts a coordinate relative to the slice to the coordinate relative
@@ -293,7 +295,7 @@ void LoopEmitter::initialize(ValueRange ts, StringAttr loopTag, bool hasOutput,
   // tensors array (len == numManifestTensor).
   this->tensors.assign(ts.begin(), ts.end());
   // Arrays with len == numTensor.
-  this->lvlTypes.assign(numTensors, std::vector<LevelType>());
+  this->lvlTypes.assign(numTensors, std::vector<DimLevelType>());
   this->lvlSizes.assign(numTensors, std::vector<Value>());
   this->highs.assign(numTensors, std::vector<Value>());
   this->segHi.assign(numTensors, std::vector<Value>());
@@ -328,7 +330,7 @@ void LoopEmitter::initialize(ValueRange ts, StringAttr loopTag, bool hasOutput,
       // to the total number of loops (each level can potentially be mapped to
       // one of the loop being generated).
       lvlRank = numLoops;
-      lvlTypes[tid].assign(lvlRank, LevelType::Dense);
+      lvlTypes[tid].assign(lvlRank, DimLevelType::Dense);
     } else {
       const Value t = tensors[tid];
       // a scalar or 0-dimension tensors
@@ -339,13 +341,15 @@ void LoopEmitter::initialize(ValueRange ts, StringAttr loopTag, bool hasOutput,
       const SparseTensorType stt(rtp);
       lvlRank = stt.getLvlRank();
 
-      if (stt.hasEncoding()) {
+      // We always treat sparse output tensor as dense so that we always iterate
+      // it based on lvl size.
+      if (stt.hasEncoding() && !(isOutputTensor(tid) && isSparseOut)) {
         const auto enc = stt.getEncoding();
         isSparseSlices[tid] = enc.isSlice();
         for (auto lvlTp : enc.getLvlTypes())
           lvlTypes[tid].push_back(lvlTp);
       } else {
-        lvlTypes[tid].assign(lvlRank, LevelType::Dense);
+        lvlTypes[tid].assign(lvlRank, DimLevelType::Dense);
       }
     }
 
@@ -2068,7 +2072,7 @@ bool LoopEmitter::genSliceBegin(OpBuilder &builder, Location loc, TensorId tid,
 
   // Only when the level is sorted, the next-non-empty slice can be computed
   // efficiently.
-  const LevelType lvlType = lvlTypes[tid][lvl];
+  const DimLevelType lvlType = lvlTypes[tid][lvl];
   assert(isOrderedLT(lvlType));
   if (isSingletonLT(lvlType)) {
     llvm_unreachable("TODO: dense level should be easy to support, while "

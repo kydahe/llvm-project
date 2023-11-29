@@ -16,11 +16,10 @@
 #include <string>
 #include <unordered_map>
 
-#include "Shared/Debug.h"
-#include "Shared/Environment.h"
-
+#include "Debug.h"
+#include "Environment.h"
 #include "GlobalHandler.h"
-#include "OpenMP/OMPT/Callback.h"
+#include "OmptCallback.h"
 #include "PluginInterface.h"
 #include "omptarget.h"
 

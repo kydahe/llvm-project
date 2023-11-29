@@ -1231,7 +1231,7 @@ Instruction *InstCombinerImpl::visitZExt(ZExtInst &Zext) {
       return &Zext;
     }
 
-    if (isKnownNonNegative(Src, SQ.getWithInstruction(&Zext))) {
+    if (isKnownNonNegative(Src, DL, 0, &AC, &Zext, &DT)) {
       Zext.setNonNeg();
       return &Zext;
     }
@@ -1389,7 +1389,7 @@ Instruction *InstCombinerImpl::visitSExt(SExtInst &Sext) {
   unsigned DestBitSize = DestTy->getScalarSizeInBits();
 
   // If the value being extended is zero or positive, use a zext instead.
-  if (isKnownNonNegative(Src, SQ.getWithInstruction(&Sext))) {
+  if (isKnownNonNegative(Src, DL, 0, &AC, &Sext, &DT)) {
     auto CI = CastInst::Create(Instruction::ZExt, Src, DestTy);
     CI->setNonNeg(true);
     return CI;

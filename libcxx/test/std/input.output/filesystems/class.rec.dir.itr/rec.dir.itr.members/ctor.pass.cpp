@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14
+// UNSUPPORTED: c++03
 // UNSUPPORTED: no-filesystem
 // UNSUPPORTED: availability-filesystem-missing
 
@@ -20,7 +20,8 @@
 // recursive_directory_iterator(const path& p, error_code& ec);
 // recursive_directory_iterator(const path& p, directory_options options, error_code& ec);
 
-#include <filesystem>
+
+#include "filesystem_include.h"
 #include <type_traits>
 #include <set>
 #include <cassert>
@@ -28,7 +29,7 @@
 #include "assert_macros.h"
 #include "test_macros.h"
 #include "filesystem_test_helper.h"
-namespace fs = std::filesystem;
+
 using namespace fs;
 
 using RDI = recursive_directory_iterator;

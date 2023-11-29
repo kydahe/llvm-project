@@ -12,10 +12,9 @@
 
 // directory_iterator, recursive_directory_iterator
 
-#include <filesystem>
+#include "filesystem_include.h"
 
 #include <iterator>
-namespace fs = std::filesystem;
 
 using value_type = fs::directory_entry;
 

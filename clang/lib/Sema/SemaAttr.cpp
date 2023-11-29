@@ -1285,8 +1285,7 @@ void Sema::ActOnPragmaFPContract(SourceLocation Loc,
   CurFPFeatures = NewFPFeatures.applyOverrides(getLangOpts());
 }
 
-void Sema::ActOnPragmaFPValueChangingOption(SourceLocation Loc,
-                                            PragmaFPKind Kind, bool IsEnabled) {
+void Sema::ActOnPragmaFPReassociate(SourceLocation Loc, bool IsEnabled) {
   if (IsEnabled) {
     // For value unsafe context, combining this pragma with eval method
     // setting is not recommended. See comment in function FixupInvocation#506.
@@ -1302,21 +1301,10 @@ void Sema::ActOnPragmaFPValueChangingOption(SourceLocation Loc,
       Reason = 0;
     if (Reason != -1)
       Diag(Loc, diag::err_setting_eval_method_used_in_unsafe_context)
-          << Reason << (Kind == PFK_Reassociate ? 4 : 5);
+          << Reason << 4;
   }
-
   FPOptionsOverride NewFPFeatures = CurFPFeatureOverrides();
-  switch (Kind) {
-  case PFK_Reassociate:
-    NewFPFeatures.setAllowFPReassociateOverride(IsEnabled);
-    break;
-  case PFK_Reciprocal:
-    NewFPFeatures.setAllowReciprocalOverride(IsEnabled);
-    break;
-  default:
-    llvm_unreachable("unhandled value changing pragma fp");
-  }
-
+  NewFPFeatures.setAllowFPReassociateOverride(IsEnabled);
   FpPragmaStack.Act(Loc, PSK_Set, StringRef(), NewFPFeatures);
   CurFPFeatures = NewFPFeatures.applyOverrides(getLangOpts());
 }

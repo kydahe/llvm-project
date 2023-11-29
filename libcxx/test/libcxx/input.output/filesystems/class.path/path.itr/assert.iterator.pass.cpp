@@ -15,13 +15,12 @@
 
 // class path
 
-#include <filesystem>
+#include "filesystem_include.h"
 #include <iterator>
 #include <type_traits>
 #include <cassert>
 
 #include "check_assertion.h"
-namespace fs = std::filesystem;
 
 int main(int, char**) {
   // Test incrementing/decrementing a singular iterator

@@ -323,7 +323,7 @@ endif()
 add_custom_target(cxx DEPENDS ${LIBCXX_BUILD_TARGETS})
 
 set(LIBCXX_EXPERIMENTAL_SOURCES
-  experimental/keep.cpp
+  experimental/memory_resource.cpp
   )
 
 if (LIBCXX_PSTL_CPU_BACKEND STREQUAL "libdispatch")

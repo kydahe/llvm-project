@@ -2104,7 +2104,7 @@ createAndSetPrivatizedLoopVar(Fortran::lower::AbstractConverter &converter,
       loc, tempTy, /*pinned=*/true, /*lengthParams=*/mlir::ValueRange{},
       /*shapeParams*/ mlir::ValueRange{},
       llvm::ArrayRef<mlir::NamedAttribute>{
-          fir::getAdaptToByRefAttr(firOpBuilder)});
+          Fortran::lower::getAdaptToByRefAttr(firOpBuilder)});
   converter.bindSymbol(*sym, temp);
   firOpBuilder.restoreInsertionPoint(insPt);
   mlir::Value cvtVal = firOpBuilder.createConvert(loc, tempTy, indexVal);

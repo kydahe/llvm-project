@@ -15,8 +15,7 @@
 // UNSUPPORTED: c++03, c++11, c++14, c++17
 // UNSUPPORTED: availability-filesystem-missing
 
-#include <filesystem>
-namespace fs = std::filesystem;
+#include "filesystem_include.h"
 
 void f() {
     fs::path c;

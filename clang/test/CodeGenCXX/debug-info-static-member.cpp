@@ -74,7 +74,7 @@ int C::a = 4;
 // CHECK-NOT:                           align:
 // CHECK-NOT:                           offset:
 // CHECK-SAME:                          flags: DIFlagStaticMember
-// CHECK-SAME:                          extraData: i1 true
+// CHECK-NOT:                           extraData:
 
 // DWARF4:     ![[CONST_B_DECL:[0-9]+]] = !DIDerivedType(tag: DW_TAG_member, name: "const_b"
 // DWARF5:     ![[CONST_B_DECL:[0-9]+]] = !DIDerivedType(tag: DW_TAG_variable, name: "const_b"
@@ -82,7 +82,7 @@ int C::a = 4;
 // CHECK-NOT:                            align:
 // CHECK-NOT:                            offset:
 // CHECK-SAME:                           flags: DIFlagProtected | DIFlagStaticMember
-// CHECK-SAME:                           extraData: float
+// CHECK-NOT:                            extraData:
 
 // DWARF4: ![[DECL_C:[0-9]+]] = !DIDerivedType(tag: DW_TAG_member, name: "c"
 // DWARF5: ![[DECL_C:[0-9]+]] = !DIDerivedType(tag: DW_TAG_variable, name: "c"
@@ -97,7 +97,7 @@ int C::a = 4;
 // CHECK-NOT:                            align:
 // CHECK-NOT:                            offset:
 // CHECK-SAME:                           flags: DIFlagPublic | DIFlagStaticMember
-// CHECK-SAME:                           extraData: i32 18
+// CHECK-NOT:                            extraData:
 //
 // DWARF4: !DIDerivedType(tag: DW_TAG_member, name: "x_a"
 // DWARF5: !DIDerivedType(tag: DW_TAG_variable, name: "x_a"
@@ -154,7 +154,7 @@ struct V {
 // const_va is not emitted for MS targets.
 // NOT-MS: !DIDerivedType(tag: DW_TAG_member, name: "const_va",
 // NOT-MS-SAME:           line: [[@LINE-5]]
-// NOT-MS-SAME:           extraData: i32 42
+// NOT-MS-NOT:            extraData:
 const int V::const_va;
 
 namespace x {

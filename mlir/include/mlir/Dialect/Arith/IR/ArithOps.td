@@ -196,9 +196,9 @@ def Arith_AddIOp : Arith_TotalIntBinaryOp<"addi", [Commutative]> {
   let summary = "integer addition operation";
   let description = [{
     The `addi` operation takes two operands and returns one result, each of
-    these is required to be the same type. This type may be an integer scalar type, 
-    a vector whose element type is integer, or a tensor of integers. It has no 
-    standard attributes.
+    these is required to be the same type. This type may be an integer scalar
+    type, a vector whose element type is integer, or a tensor of integers. It
+    has no standard attributes.
 
     Example:
 
@@ -273,9 +273,7 @@ def Arith_AddUIExtendedOp : Arith_Op<"addui_extended", [Pure, Commutative,
 //===----------------------------------------------------------------------===//
 
 def Arith_SubIOp : Arith_TotalIntBinaryOp<"subi"> {
-  let summary = [{
-    Integer subtraction operation.
-  }];
+  let summary = "integer subtraction operation";
   let hasFolder = 1;
   let hasCanonicalizer = 1;
 }
@@ -285,9 +283,7 @@ def Arith_SubIOp : Arith_TotalIntBinaryOp<"subi"> {
 //===----------------------------------------------------------------------===//
 
 def Arith_MulIOp : Arith_TotalIntBinaryOp<"muli", [Commutative]> {
-  let summary = [{
-    Integer multiplication operation.
-  }];
+  let summary = "integer multiplication operation";
   let hasFolder = 1;
   let hasCanonicalizer = 1;
 }
@@ -389,9 +385,8 @@ def Arith_DivUIOp : Arith_IntBinaryOp<"divui", [ConditionallySpeculatable]> {
     the most significant, i.e. for `i16` given two's complement representation,
     `6 / -2 = 6 / (2^16 - 2) = 0`.
 
-    Division by zero is undefined behavior. When applied to `vector` and 
-    `tensor` values, the behavior is undefined if _any_ elements are divided by 
-    zero.
+    Note: the semantics of division by zero is TBD; do NOT assume any specific
+    behavior.
 
     Example:
 
@@ -425,10 +420,8 @@ def Arith_DivSIOp : Arith_IntBinaryOp<"divsi", [ConditionallySpeculatable]> {
     Signed integer division. Rounds towards zero. Treats the leading bit as
     sign, i.e. `6 / -2 = -3`.
 
-    Divison by zero, or signed division overflow (minimum value divided by -1) 
-    is undefined behavior. When applied to `vector` and `tensor` values, the 
-    behavior is undefined if _any_ of its elements are divided by zero or has a 
-    signed division overflow.
+    Note: the semantics of division by zero or signed division overflow (minimum
+    value divided by -1) is TBD; do NOT assume any specific behavior.
 
     Example:
 
@@ -462,11 +455,10 @@ def Arith_CeilDivUIOp : Arith_IntBinaryOp<"ceildivui",
   let description = [{
     Unsigned integer division. Rounds towards positive infinity. Treats the
     leading bit as the most significant, i.e. for `i16` given two's complement
-    representation, `6 / -2 = 6 / (2^16 - 2) = 1`. 
+    representation, `6 / -2 = 6 / (2^16 - 2) = 1`.
 
-    Division by zero is undefined behavior. When applied to `vector` and 
-    `tensor` values, the behavior is undefined if _any_ elements are divided by 
-    zero.
+    Note: the semantics of division by zero is TBD; do NOT assume any specific
+    behavior.
 
     Example:
 
@@ -494,10 +486,8 @@ def Arith_CeilDivSIOp : Arith_IntBinaryOp<"ceildivsi",
   let description = [{
     Signed integer division. Rounds towards positive infinity, i.e. `7 / -2 = -3`.
 
-    Divison by zero, or signed division overflow (minimum value divided by -1) 
-    is undefined behavior. When applied to `vector` and `tensor` values, the 
-    behavior is undefined if _any_ of its elements are divided by zero or has a 
-    signed division overflow.
+    Note: the semantics of division by zero or signed division overflow (minimum
+    value divided by -1) is TBD; do NOT assume any specific behavior.
 
     Example:
 
@@ -524,10 +514,8 @@ def Arith_FloorDivSIOp : Arith_TotalIntBinaryOp<"floordivsi"> {
   let description = [{
     Signed integer division. Rounds towards negative infinity, i.e. `5 / -2 = -3`.
 
-    Divison by zero, or signed division overflow (minimum value divided by -1) 
-    is undefined behavior. When applied to `vector` and `tensor` values, the 
-    behavior is undefined if _any_ of its elements are divided by zero or has a 
-    signed division overflow.
+    Note: the semantics of division by zero or signed division overflow (minimum
+    value divided by -1) is TBD; do NOT assume any specific behavior.
 
     Example:
 
@@ -550,9 +538,8 @@ def Arith_RemUIOp : Arith_TotalIntBinaryOp<"remui"> {
     Unsigned integer division remainder. Treats the leading bit as the most
     significant, i.e. for `i16`, `6 % -2 = 6 % (2^16 - 2) = 6`.
 
-    Division by zero is undefined behavior. When applied to `vector` and 
-    `tensor` values, the behavior is undefined if _any_ elements are divided by 
-    zero.
+    Note: the semantics of division by zero is TBD; do NOT assume any specific
+    behavior.
 
     Example:
 
@@ -580,9 +567,8 @@ def Arith_RemSIOp : Arith_TotalIntBinaryOp<"remsi"> {
     Signed integer division remainder. Treats the leading bit as sign, i.e. `6 %
     -2 = 0`.
 
-    Division by zero is undefined behavior. When applied to `vector` and 
-    `tensor` values, the behavior is undefined if _any_ elements are divided by 
-    zero.
+    Note: the semantics of division by zero is TBD; do NOT assume any specific
+    behavior.
 
     Example:
 
@@ -694,11 +680,8 @@ def Arith_XOrIOp : Arith_TotalIntBinaryOp<"xori", [Commutative]> {
 def Arith_ShLIOp : Arith_TotalIntBinaryOp<"shli"> {
   let summary = "integer left-shift";
   let description = [{
-    The `shli` operation shifts the integer value of the first operand to the left 
-    by the integer value of the second operand. The second operand is interpreted as 
-    unsigned. The low order bits are filled with zeros. If the value of the second 
-    operand is greater than the bitwidth of the first operand, then the 
-    operation returns poison.
+    The `shli` operation shifts an integer value to the left by a variable
+    amount. The low order bits are filled with zeros.
 
     Example:
 
@@ -718,11 +701,9 @@ def Arith_ShLIOp : Arith_TotalIntBinaryOp<"shli"> {
 def Arith_ShRUIOp : Arith_TotalIntBinaryOp<"shrui"> {
   let summary = "unsigned integer right-shift";
   let description = [{
-    The `shrui` operation shifts an integer value of the first operand to the right 
-    by the value of the second operand. The first operand is interpreted as unsigned,
-    and the second operand is interpreted as unsigned. The high order bits are always 
-    filled with zeros. If the value of the second operand is greater than the bitwidth
-    of the first operand, then the operation returns poison.
+    The `shrui` operation shifts an integer value to the right by a variable
+    amount. The integer is interpreted as unsigned. The high order bits are
+    always filled with zeros.
 
     Example:
 
@@ -742,13 +723,10 @@ def Arith_ShRUIOp : Arith_TotalIntBinaryOp<"shrui"> {
 def Arith_ShRSIOp : Arith_TotalIntBinaryOp<"shrsi"> {
   let summary = "signed integer right-shift";
   let description = [{
-    The `shrsi` operation shifts an integer value of the first operand to the right 
-    by the value of the second operand. The first operand is interpreted as signed, 
-    and the second operand is interpreter as unsigned. The high order bits in the 
-    output are filled with copies of the most-significant bit of the shifted value 
-    (which means that the sign of the value is preserved). If the value of the second 
-    operand is greater than bitwidth of the first operand, then the operation returns 
-    poison.
+    The `shrsi` operation shifts an integer value to the right by a variable
+    amount. The integer is interpreted as signed. The high order bits in the
+    output are filled with copies of the most-significant bit of the shifted
+    value (which means that the sign of the value is preserved).
 
     Example:
 
@@ -1420,16 +1398,9 @@ def SelectOp : Arith_Op<"select", [Pure,
   let summary = "select operation";
   let description = [{
     The `arith.select` operation chooses one value based on a binary condition
-    supplied as its first operand. 
-    
-    If the value of the first operand (the condition) is `1`, then the second 
-    operand is returned, and the third operand is ignored, even if it was poison. 
-    
-    If the value of the first operand (the condition) is `0`, then the third 
-    operand is returned, and the second operand is ignored, even if it was poison. 
-    
-    If the value of the first operand (the condition) is poison, then the 
-    operation returns poison. 
+    supplied as its first operand. If the value of the first operand is `1`,
+    the second operand is chosen, otherwise the third operand is chosen.
+    The second and the third operand must have the same type.
 
     The operation applies to vectors and tensors elementwise given the _shape_
     of all operands is identical. The choice is made for each element

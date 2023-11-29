@@ -64,14 +64,18 @@ public:
   SparseTensorType(const SparseTensorType &) = default;
 
   //
-  // Factory methods to construct a new `SparseTensorType`
-  // with the same dimension-shape and element type.
+  // Factory methods.
   //
 
+  /// Constructs a new `SparseTensorType` with the same dimension-shape
+  /// and element type, but with the encoding replaced by the given encoding.
   SparseTensorType withEncoding(SparseTensorEncodingAttr newEnc) const {
     return SparseTensorType(rtp, newEnc);
   }
 
+  /// Constructs a new `SparseTensorType` with the same dimension-shape
+  /// and element type, but with the encoding replaced by
+  /// `getEncoding().withDimToLvl(dimToLvl)`.
   SparseTensorType withDimToLvl(AffineMap dimToLvl) const {
     return withEncoding(enc.withDimToLvl(dimToLvl));
   }
@@ -84,14 +88,23 @@ public:
     return withDimToLvl(dimToLvlSTT.getEncoding());
   }
 
+  /// Constructs a new `SparseTensorType` with the same dimension-shape
+  /// and element type, but with the encoding replaced by
+  /// `getEncoding().withoutDimToLvl()`.
   SparseTensorType withoutDimToLvl() const {
     return withEncoding(enc.withoutDimToLvl());
   }
 
+  /// Constructs a new `SparseTensorType` with the same dimension-shape
+  /// and element type, but with the encoding replaced by
+  /// `getEncoding().withBitWidths(posWidth, crdWidth)`.
   SparseTensorType withBitWidths(unsigned posWidth, unsigned crdWidth) const {
     return withEncoding(enc.withBitWidths(posWidth, crdWidth));
   }
 
+  /// Constructs a new `SparseTensorType` with the same dimension-shape
+  /// and element type, but with the encoding replaced by
+  /// `getEncoding().withoutBitWidths()`.
   SparseTensorType withoutBitWidths() const {
     return withEncoding(enc.withoutBitWidths());
   }
@@ -104,6 +117,10 @@ public:
   SparseTensorType withoutDimSlices() const {
     return withEncoding(enc.withoutDimSlices());
   }
+
+  //
+  // Other methods.
+  //
 
   /// Allow implicit conversion to `RankedTensorType`, `ShapedType`,
   /// and `Type`.  These are implicit to help alleviate the impedance
@@ -153,6 +170,7 @@ public:
 
   Type getElementType() const { return rtp.getElementType(); }
 
+  /// Returns the encoding (or the null-attribute for dense-tensors).
   SparseTensorEncodingAttr getEncoding() const { return enc; }
 
   //
@@ -185,10 +203,6 @@ public:
   /// Returns true if the dimToLvl mapping is the identity.
   /// (This is always true for dense-tensors.)
   bool isIdentity() const { return enc.isIdentity(); }
-
-  //
-  // Other methods.
-  //
 
   /// Returns the dimToLvl mapping (or the null-map for the identity).
   /// If you intend to compare the results of this method for equality,
@@ -268,8 +282,8 @@ public:
   /// `ShapedType::Trait<T>::getNumDynamicDims`.
   int64_t getNumDynamicDims() const { return rtp.getNumDynamicDims(); }
 
-  ArrayRef<LevelType> getLvlTypes() const { return enc.getLvlTypes(); }
-  LevelType getLvlType(Level l) const {
+  ArrayRef<DimLevelType> getLvlTypes() const { return enc.getLvlTypes(); }
+  DimLevelType getLvlType(Level l) const {
     // This OOB check is for dense-tensors, since this class knows
     // their lvlRank (whereas STEA::getLvlType will/can only check
     // OOB for sparse-tensors).
@@ -310,9 +324,6 @@ public:
       return IntegerType::get(getContext(), getPosWidth());
     return IndexType::get(getContext());
   }
-
-  /// Returns [un]ordered COO type for this sparse tensor type.
-  RankedTensorType getCOOType(bool ordered) const;
 
 private:
   // These two must be const, to ensure coherence of the memoized fields.

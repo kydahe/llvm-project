@@ -13,7 +13,6 @@
 #include <__algorithm/pstl_copy.h>
 #include <__algorithm/pstl_frontend_dispatch.h>
 #include <__type_traits/is_execution_policy.h>
-#include <optional>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header

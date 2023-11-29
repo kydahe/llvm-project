@@ -197,23 +197,6 @@ struct CastAwayInsertLeadingOneDim : public OpRewritePattern<vector::InsertOp> {
   }
 };
 
-static Value dropUnitDimsFromMask(OpBuilder &b, Location loc, Value mask,
-                                  VectorType newType, AffineMap newMap,
-                                  VectorType oldMaskType) {
-  // Infer the type of the new mask from the new map.
-  VectorType newMaskType = inferTransferOpMaskType(newType, newMap);
-
-  // If the new mask is broadcastable to the old result type, we can safely
-  // use a `vector.extract` to get the new mask. Otherwise the best we can
-  // do is shape cast.
-  if (vector::isBroadcastableTo(newMaskType, oldMaskType) ==
-      BroadcastableToResult::Success) {
-    int64_t dropDim = oldMaskType.getRank() - newMaskType.getRank();
-    return b.create<vector::ExtractOp>(loc, mask, splatZero(dropDim));
-  }
-  return b.create<vector::ShapeCastOp>(loc, newMaskType, mask);
-}
-
 // Turns vector.transfer_read on vector with leading 1 dimensions into
 // vector.shape_cast followed by vector.transfer_read on vector without leading
 // 1 dimensions.
@@ -251,9 +234,11 @@ struct CastAwayTransferReadLeadingOneDim
 
     Value mask = Value();
     if (read.getMask()) {
-      VectorType maskType = read.getMaskType();
-      mask = dropUnitDimsFromMask(rewriter, read.getLoc(), read.getMask(),
-                                  newType, newMap, maskType);
+      // The mask shape must always match the shape of the written vector, so we
+      // can safely use the same extraction indices.
+      int64_t dropDim = oldType.getRank() - newType.getRank();
+      mask = rewriter.create<vector::ExtractOp>(read.getLoc(), read.getMask(),
+                                                splatZero(dropDim));
     }
 
     auto newRead = rewriter.create<vector::TransferReadOp>(
@@ -304,9 +289,10 @@ struct CastAwayTransferWriteLeadingOneDim
         write.getLoc(), write.getVector(), splatZero(dropDim));
 
     if (write.getMask()) {
-      VectorType maskType = write.getMaskType();
-      Value newMask = dropUnitDimsFromMask(
-          rewriter, write.getLoc(), write.getMask(), newType, newMap, maskType);
+      // The mask shape must always match the shape of the written vector, so we
+      // can safely use the same extraction indices.
+      auto newMask = rewriter.create<vector::ExtractOp>(
+          write.getLoc(), write.getMask(), splatZero(dropDim));
       rewriter.replaceOpWithNewOp<vector::TransferWriteOp>(
           write, newVector, write.getSource(), write.getIndices(),
           AffineMapAttr::get(newMap), newMask, inBoundsAttr);

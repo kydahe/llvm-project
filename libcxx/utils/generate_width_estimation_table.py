@@ -15,7 +15,7 @@
 
 from io import StringIO
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 import re
 import sys

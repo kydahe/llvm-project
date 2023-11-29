@@ -43,6 +43,13 @@ def SPIRV_CompositeConstructOp : SPIRV_Op<"CompositeConstruct", [Pure]> {
     type of the result. When constructing a vector, there must be at least
     two Constituent operands.
 
+    <!-- End of AutoGen section -->
+
+    ```
+    composite-construct-op ::= ssa-id `=` `spirv.CompositeConstruct`
+                               (ssa-use (`,` ssa-use)* )? `:` composite-type
+    ```
+
     #### Example:
 
     ```mlir
@@ -250,6 +257,16 @@ def SPIRV_VectorInsertDynamicOp : SPIRV_Op<"VectorInsertDynamic", [
 
     Behavior is undefined if Index's value is less than zero or greater than
     or equal to the number of components in Vector.
+
+    <!-- End of AutoGen section -->
+
+    ```
+    scalar-type ::= integer-type | float-type | boolean-type
+    vector-insert-dynamic-op ::= `spirv.VectorInsertDynamic ` ssa-use `,`
+                                  ssa-use `[` ssa-use `]`
+                                  `:` `vector<` integer-literal `x` scalar-type `>` `,`
+                                  integer-type
+    ```
 
     #### Example:
 

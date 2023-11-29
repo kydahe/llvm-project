@@ -1208,10 +1208,8 @@ unsigned ContinuationIndenter::getNewLineColumn(const LineState &State) {
 
   // Indentation of the statement following a Verilog case label is taken care
   // of in moveStateToNextToken.
-  if (Style.isVerilog() && PreviousNonComment &&
-      Keywords.isVerilogEndOfLabel(*PreviousNonComment)) {
+  if (Style.isVerilog() && Keywords.isVerilogEndOfLabel(Previous))
     return State.FirstIndent;
-  }
 
   if (Style.BreakBeforeBraces == FormatStyle::BS_Whitesmiths &&
       State.Line->First->is(tok::kw_enum)) {
@@ -1614,7 +1612,6 @@ unsigned ContinuationIndenter::moveStateToNextToken(LineState &State,
       State.NextToken->MustBreakBefore &&
       Keywords.isVerilogEndOfLabel(Current)) {
     State.FirstIndent += Style.IndentWidth;
-    CurrentState.Indent = State.FirstIndent;
   }
 
   unsigned Penalty =

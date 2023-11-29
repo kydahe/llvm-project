@@ -13,7 +13,6 @@
 // Hangs with msan.
 // UNSUPPORTED: msan
 // ADDITIONAL_COMPILE_FLAGS(has-latomic): -latomic
-// XFAIL: !has-64-bit-atomics
 
 // floating-point-type fetch_sub(floating-point-type,
 //                               memory_order = memory_order::seq_cst) volatile noexcept;

@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 int add(int a, int b) { return a + b; }
 int minus(int a, int b) { return a - b; }
 int multiple(int a, int b) { return a * b; }
@@ -11,7 +15,7 @@ int main() {
   int a = 16;
   int b = 8;
 
-  for (int i = 1; i < 1000000; i++) {
+  for (int i = 1; i < 100000; i++) {
     add(a, b);
     minus(a, b);
     multiple(a, b);

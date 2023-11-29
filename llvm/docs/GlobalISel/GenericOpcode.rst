@@ -751,10 +751,9 @@ operands.
 G_FENCE
 ^^^^^^^
 
-Generic fence. The first operand is the memory ordering. The second operand is
-the syncscope.
+.. caution::
 
-See the LLVM LangRef entry on the '``fence'`` instruction for more details.
+  I couldn't find any documentation on this at the time of writing.
 
 G_MEMCPY
 ^^^^^^^^

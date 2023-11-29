@@ -12,8 +12,7 @@
 
 #include <__bit/bit_ceil.h>
 #include <__memory/assume_aligned.h>
-#include <cstddef>
-#include <experimental/__config>
+#include <cstdint>
 
 #if _LIBCPP_STD_VER >= 17 && defined(_LIBCPP_ENABLE_EXPERIMENTAL)
 

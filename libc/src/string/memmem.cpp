@@ -15,10 +15,10 @@ namespace LIBC_NAMESPACE {
 LLVM_LIBC_FUNCTION(void *, memmem,
                    (const void *haystack, size_t haystack_len,
                     const void *needle, size_t needle_len)) {
-  constexpr auto COMP = [](unsigned char l, unsigned char r) -> int {
+  constexpr auto comp = [](unsigned char l, unsigned char r) -> int {
     return l - r;
   };
-  return inline_memmem(haystack, haystack_len, needle, needle_len, COMP);
+  return inline_memmem(haystack, haystack_len, needle, needle_len, comp);
 }
 
 } // namespace LIBC_NAMESPACE

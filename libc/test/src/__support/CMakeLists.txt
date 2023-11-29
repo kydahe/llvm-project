@@ -126,32 +126,6 @@ add_libc_test(
     libc.src.__support.char_vector
 )
 
-add_libc_test(
-  hash_test
-  SUITE
-    libc-support-tests
-  SRCS
-    hash_test.cpp
-  DEPENDS
-    libc.src.__support.hash
-    libc.src.__support.CPP.new
-    libc.src.stdlib.rand
-    libc.src.stdlib.srand
-    libc.src.string.memset
-  UNIT_TEST_ONLY
-    # Aligned Allocation is not supported in hermetic builds.
-)
-
-add_libc_test(
-  memory_size_test
-  SUITE
-    libc-support-tests
-  SRCS
-    memory_size_test.cpp
-  DEPENDS
-    libc.src.__support.memory_size
-)
-
 add_executable(
   libc_str_to_float_comparison_test
   str_to_float_comparison_test.cpp
@@ -181,4 +155,3 @@ add_subdirectory(File)
 add_subdirectory(RPC)
 add_subdirectory(OSUtil)
 add_subdirectory(FPUtil)
-add_subdirectory(HashTable)

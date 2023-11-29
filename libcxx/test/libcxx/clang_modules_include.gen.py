@@ -39,9 +39,6 @@ for header in public_headers:
 // TODO: Investigate this failure
 // UNSUPPORTED{BLOCKLIT}: LIBCXX-FREEBSD-FIXME
 
-// TODO: Investigate this failure
-// UNSUPPORTED{BLOCKLIT}: LIBCXX-PICOLIBC-FIXME
-
 {lit_header_restrictions.get(header, '')}
 
 #include <{header}>

@@ -27,14 +27,11 @@
 #include "mlir/IR/TypeUtilities.h"
 #include "mlir/Interfaces/FunctionImplementation.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
-#include "mlir/Support/LogicalResult.h"
 #include "mlir/Transforms/InliningUtils.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/StringSaver.h"
-#include <cassert>
 
 using namespace mlir;
 using namespace mlir::gpu;
@@ -488,23 +485,12 @@ static LogicalResult verifyAttributions(Operation *op,
 // AllReduceOp
 //===----------------------------------------------------------------------===//
 
-static LogicalResult verifyReduceOpAndType(gpu::AllReduceOperation opName,
-                                           Type resType) {
-  using Kind = gpu::AllReduceOperation;
-  if (llvm::is_contained(
-          {Kind::MINF, Kind::MAXF, Kind::MINIMUMF, Kind::MAXIMUMF}, opName)) {
-    if (!isa<FloatType>(resType))
-      return failure();
-  }
-
-  if (llvm::is_contained({Kind::MINSI, Kind::MINUI, Kind::MAXSI, Kind::MAXUI,
-                          Kind::AND, Kind::OR, Kind::XOR},
-                         opName)) {
-    if (!isa<IntegerType>(resType))
-      return failure();
-  }
-
-  return success();
+static bool verifyReduceOpAndType(gpu::AllReduceOperation opName,
+                                  Type resType) {
+  return (opName != gpu::AllReduceOperation::AND &&
+          opName != gpu::AllReduceOperation::OR &&
+          opName != gpu::AllReduceOperation::XOR) ||
+         llvm::isa<IntegerType>(resType);
 }
 
 LogicalResult gpu::AllReduceOp::verifyRegions() {
@@ -531,13 +517,12 @@ LogicalResult gpu::AllReduceOp::verifyRegions() {
       return emitError("expected gpu.yield op in region");
   } else {
     gpu::AllReduceOperation opName = *getOp();
-    if (failed(verifyReduceOpAndType(opName, getType()))) {
-      return emitError() << '`' << gpu::stringifyAllReduceOperation(opName)
-                         << "` reduction operation is not compatible with type "
-                         << getType();
+    if (!verifyReduceOpAndType(opName, getType())) {
+      return emitError()
+             << '`' << gpu::stringifyAllReduceOperation(opName)
+             << "` accumulator is only compatible with Integer type";
     }
   }
-
   return success();
 }
 
@@ -588,10 +573,9 @@ static void printAllReduceOperation(AsmPrinter &printer, Operation *op,
 
 LogicalResult gpu::SubgroupReduceOp::verify() {
   gpu::AllReduceOperation opName = getOp();
-  if (failed(verifyReduceOpAndType(opName, getType()))) {
+  if (!verifyReduceOpAndType(opName, getType())) {
     return emitError() << '`' << gpu::stringifyAllReduceOperation(opName)
-                       << "` reduction operation is not compatible with type "
-                       << getType();
+                       << "` accumulator is only compatible with Integer type";
   }
   return success();
 }
@@ -1001,8 +985,7 @@ void LaunchFuncOp::build(OpBuilder &builder, OperationState &result,
                          GPUFuncOp kernelFunc, KernelDim3 gridSize,
                          KernelDim3 getBlockSize, Value dynamicSharedMemorySize,
                          ValueRange kernelOperands, Type asyncTokenType,
-                         ValueRange asyncDependencies,
-                         std::optional<KernelDim3> clusterSize) {
+                         ValueRange asyncDependencies) {
   result.addOperands(asyncDependencies);
   if (asyncTokenType)
     result.types.push_back(builder.getType<AsyncTokenType>());
@@ -1010,8 +993,6 @@ void LaunchFuncOp::build(OpBuilder &builder, OperationState &result,
   // Add grid and block sizes as op operands, followed by the data operands.
   result.addOperands({gridSize.x, gridSize.y, gridSize.z, getBlockSize.x,
                       getBlockSize.y, getBlockSize.z});
-  if (clusterSize.has_value())
-    result.addOperands({clusterSize->x, clusterSize->y, clusterSize->z});
   if (dynamicSharedMemorySize)
     result.addOperands(dynamicSharedMemorySize);
   result.addOperands(kernelOperands);
@@ -1027,11 +1008,6 @@ void LaunchFuncOp::build(OpBuilder &builder, OperationState &result,
   for (auto &sz : prop.operandSegmentSizes)
     sz = 1;
   prop.operandSegmentSizes[0] = asyncDependencies.size();
-  if (!clusterSize.has_value()) {
-    prop.operandSegmentSizes[segmentSizesLen - 4] = 0;
-    prop.operandSegmentSizes[segmentSizesLen - 5] = 0;
-    prop.operandSegmentSizes[segmentSizesLen - 6] = 0;
-  }
   prop.operandSegmentSizes[segmentSizesLen - 3] =
       dynamicSharedMemorySize ? 1 : 0;
   prop.operandSegmentSizes[segmentSizesLen - 2] =
@@ -1042,13 +1018,10 @@ void LaunchFuncOp::build(OpBuilder &builder, OperationState &result,
 void LaunchFuncOp::build(OpBuilder &builder, OperationState &result,
                          SymbolRefAttr kernel, KernelDim3 gridSize,
                          KernelDim3 getBlockSize, Value dynamicSharedMemorySize,
-                         ValueRange kernelOperands, Value asyncObject,
-                         std::optional<KernelDim3> clusterSize) {
+                         ValueRange kernelOperands, Value asyncObject) {
   // Add grid and block sizes as op operands, followed by the data operands.
   result.addOperands({gridSize.x, gridSize.y, gridSize.z, getBlockSize.x,
                       getBlockSize.y, getBlockSize.z});
-  if (clusterSize.has_value())
-    result.addOperands({clusterSize->x, clusterSize->y, clusterSize->z});
   if (dynamicSharedMemorySize)
     result.addOperands(dynamicSharedMemorySize);
   result.addOperands(kernelOperands);
@@ -1061,11 +1034,6 @@ void LaunchFuncOp::build(OpBuilder &builder, OperationState &result,
   for (auto &sz : prop.operandSegmentSizes)
     sz = 1;
   prop.operandSegmentSizes[0] = 0;
-  if (!clusterSize.has_value()) {
-    prop.operandSegmentSizes[segmentSizesLen - 4] = 0;
-    prop.operandSegmentSizes[segmentSizesLen - 5] = 0;
-    prop.operandSegmentSizes[segmentSizesLen - 6] = 0;
-  }
   prop.operandSegmentSizes[segmentSizesLen - 3] =
       dynamicSharedMemorySize ? 1 : 0;
   prop.operandSegmentSizes[segmentSizesLen - 2] =
@@ -1099,13 +1067,6 @@ KernelDim3 LaunchFuncOp::getBlockSizeOperandValues() {
   return KernelDim3{operands[3], operands[4], operands[5]};
 }
 
-KernelDim3 LaunchFuncOp::getClusterSizeOperandValues() {
-  assert(hasClusterSize() &&
-         "cluster size is not set, check hasClusterSize() first");
-  auto operands = getOperands().drop_front(getAsyncDependencies().size());
-  return KernelDim3{operands[6], operands[7], operands[8]};
-}
-
 LogicalResult LaunchFuncOp::verify() {
   auto module = (*this)->getParentOfType<ModuleOp>();
   if (!module)
@@ -1117,35 +1078,21 @@ LogicalResult LaunchFuncOp::verify() {
                        GPUDialect::getContainerModuleAttrName() +
                        "' attribute");
 
-  if (hasClusterSize()) {
-    if (getClusterSizeY().getType() != getClusterSizeX().getType() ||
-        getClusterSizeZ().getType() != getClusterSizeX().getType())
-      return emitOpError()
-             << "expects types of the cluster dimensions must be the same";
-  }
-
   return success();
 }
 
-static ParseResult
-parseLaunchDimType(OpAsmParser &parser, Type &dimTy,
-                   std::optional<OpAsmParser::UnresolvedOperand> clusterValue,
-                   Type &clusterXTy, Type &clusterYTy, Type &clusterZTy) {
+static ParseResult parseLaunchDimType(OpAsmParser &parser, Type &dimTy) {
   if (succeeded(parser.parseOptionalColon())) {
     if (parser.parseType(dimTy))
       return failure();
   } else {
     dimTy = IndexType::get(parser.getContext());
   }
-  if (clusterValue.has_value()) {
-    clusterXTy = clusterYTy = clusterZTy = dimTy;
-  }
   return success();
 }
 
-static void printLaunchDimType(OpAsmPrinter &printer, Operation *op, Type dimTy,
-                               Value clusterValue, Type clusterXTy,
-                               Type clusterYTy, Type clusterZTy) {
+static void printLaunchDimType(OpAsmPrinter &printer, Operation *op,
+                               Type dimTy) {
   if (!dimTy.isIndex())
     printer << ": " << dimTy;
 }

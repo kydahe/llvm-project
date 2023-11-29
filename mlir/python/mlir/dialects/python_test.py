@@ -11,7 +11,7 @@ from .._mlir_libs._mlirPythonTest import (
 )
 
 
-def register_python_test_dialect(registry):
+def register_python_test_dialect(context, load=True):
     from .._mlir_libs import _mlirPythonTest
 
-    _mlirPythonTest.register_dialect(registry)
+    _mlirPythonTest.register_python_test_dialect(context, load)

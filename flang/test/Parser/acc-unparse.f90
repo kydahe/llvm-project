@@ -9,7 +9,7 @@ program bug47659
     !$acc parallel loop
     do j = 1, 10
       if (j == 2) then
-        stop 1
+        exit label1
       end if
     end do
   end do label1

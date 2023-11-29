@@ -185,8 +185,7 @@ struct LLVM_LIBRARY_VISIBILITY Shape {
     switch (ABI) {
     case coro::ABI::Switch:
       return FunctionType::get(Type::getVoidTy(FrameTy->getContext()),
-                               PointerType::getUnqual(FrameTy->getContext()),
-                               /*IsVarArg=*/false);
+                               FrameTy->getPointerTo(), /*IsVarArg*/false);
     case coro::ABI::Retcon:
     case coro::ABI::RetconOnce:
       return RetconLowering.ResumePrototype->getFunctionType();

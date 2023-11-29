@@ -3452,38 +3452,17 @@ void SelectionDAGISel::SelectCodeCommon(SDNode *NodeToMatch,
       continue;
     }
     case OPC_EmitInteger:
-    case OPC_EmitInteger8:
-    case OPC_EmitInteger16:
-    case OPC_EmitInteger32:
-    case OPC_EmitInteger64:
-    case OPC_EmitStringInteger:
-    case OPC_EmitStringInteger32: {
-      MVT::SimpleValueType VT;
-      switch (Opcode) {
-      case OPC_EmitInteger8:
-        VT = MVT::i8;
-        break;
-      case OPC_EmitInteger16:
-        VT = MVT::i16;
-        break;
-      case OPC_EmitInteger32:
-      case OPC_EmitStringInteger32:
-        VT = MVT::i32;
-        break;
-      case OPC_EmitInteger64:
-        VT = MVT::i64;
-        break;
-      default:
-        VT = (MVT::SimpleValueType)MatcherTable[MatcherIndex++];
-        break;
-      }
+    case OPC_EmitStringInteger: {
+      MVT::SimpleValueType VT =
+        (MVT::SimpleValueType)MatcherTable[MatcherIndex++];
       int64_t Val = MatcherTable[MatcherIndex++];
       if (Val & 128)
         Val = GetVBR(Val, MatcherTable, MatcherIndex);
-      if (Opcode >= OPC_EmitInteger && Opcode <= OPC_EmitInteger64)
+      if (Opcode == OPC_EmitInteger)
         Val = decodeSignRotatedValue(Val);
-      RecordedNodes.push_back(std::pair<SDValue, SDNode *>(
-          CurDAG->getTargetConstant(Val, SDLoc(NodeToMatch), VT), nullptr));
+      RecordedNodes.push_back(std::pair<SDValue, SDNode*>(
+                              CurDAG->getTargetConstant(Val, SDLoc(NodeToMatch),
+                                                        VT), nullptr));
       continue;
     }
     case OPC_EmitRegister: {

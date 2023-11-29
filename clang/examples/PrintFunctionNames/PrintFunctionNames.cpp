@@ -18,7 +18,15 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/raw_ostream.h"
+
+#include <utility>
+#include<sstream>
+#include<iostream>
+#include<fstream>
+
 using namespace clang;
+
+std::string func_output_path = "";
 
 namespace {
 
@@ -34,8 +42,39 @@ public:
   bool HandleTopLevelDecl(DeclGroupRef DG) override {
     for (DeclGroupRef::iterator i = DG.begin(), e = DG.end(); i != e; ++i) {
       const Decl *D = *i;
-      if (const NamedDecl *ND = dyn_cast<NamedDecl>(D))
-        llvm::errs() << "top-level-decl: \"" << ND->getNameAsString() << "\"\n";
+      // if (const NamedDecl *ND = dyn_cast<NamedDecl>(D))
+      //   llvm::errs() << "top-level-decl: \"" << ND->getNameAsString() << "\"\n";
+      if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)){
+        std::ostringstream ostring;
+        ostring << QualType(FD->getReturnType().getTypePtr()->getUnqualifiedDesugaredType(),0).getAsString();
+        ostring << " ";
+        ostring << FD->getQualifiedNameAsString();
+        ostring << "(";
+        // for (ParmVarDecl * pi = FD->param_begin(), pe = FD->param_end(); pi != pe;){
+        //     ostring << QualType(pi->getOriginalType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString()
+        //     << " " << pi->getNameAsString();
+        //     ++pi;
+        //     if(pi != pe){
+        //       ostring << ", ";
+        //     }
+        // }
+        int n = 0;
+        for (auto item : FD->parameters()){
+          ostring << QualType(item->getOriginalType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString()
+            << " " << item->getNameAsString();
+          n++;
+          if (n!= FD->param_size()){
+            ostring << ", ";
+          }
+        }
+        ostring << ");\n";
+        
+        std::string result = ostring.str();
+        std::ofstream file;
+        file.open(func_output_path,std::ios::app);
+        file << result;
+        file.close();
+      }
     }
 
     return true;
@@ -72,7 +111,7 @@ public:
           *sema.LateParsedTemplateMap.find(FD)->second;
       sema.LateTemplateParser(sema.OpaqueParser, LPT);
       llvm::errs() << "late-parsed-decl: \"" << FD->getNameAsString() << "\"\n";
-    }   
+    } 
   }
 };
 
@@ -86,33 +125,18 @@ protected:
 
   bool ParseArgs(const CompilerInstance &CI,
                  const std::vector<std::string> &args) override {
-    for (unsigned i = 0, e = args.size(); i != e; ++i) {
-      llvm::errs() << "PrintFunctionNames arg = " << args[i] << "\n";
-
-      // Example error handling.
-      DiagnosticsEngine &D = CI.getDiagnostics();
-      if (args[i] == "-an-error") {
-        unsigned DiagID = D.getCustomDiagID(DiagnosticsEngine::Error,
-                                            "invalid argument '%0'");
-        D.Report(DiagID) << args[i];
-        return false;
-      } else if (args[i] == "-parse-template") {
-        if (i + 1 >= e) {
-          D.Report(D.getCustomDiagID(DiagnosticsEngine::Error,
-                                     "missing -parse-template argument"));
-          return false;
-        }
-        ++i;
-        ParsedTemplates.insert(args[i]);
-      }
+    if(args.size() < 1){
+      llvm::errs() << "Lack Output Path!\n";
+      return false;
     }
-    if (!args.empty() && args[0] == "help")
-      PrintHelp(llvm::errs());
-
+    if(func_output_path == ""){
+      func_output_path = args[0];
+      // std::ofstream file;
+      // file.open(func_output_path, std::ios::out);
+      // file.close();
+    }
+    
     return true;
-  }
-  void PrintHelp(llvm::raw_ostream& ros) {
-    ros << "Help for PrintFunctionNames plugin goes here\n";
   }
 
 };

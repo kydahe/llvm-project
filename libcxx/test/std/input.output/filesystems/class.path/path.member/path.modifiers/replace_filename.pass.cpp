@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14
+// UNSUPPORTED: c++03
 // UNSUPPORTED: availability-filesystem-missing
 
 // <filesystem>
@@ -15,14 +15,13 @@
 
 // path& replace_filename( const path& replacement );
 
-#include <filesystem>
+#include "filesystem_include.h"
 #include <cassert>
 #include <string>
 #include <type_traits>
 
 #include "test_iterators.h"
 #include "count_new.h"
-namespace fs = std::filesystem;
 
 struct ReplaceFilenameTestcase {
   const char* value;

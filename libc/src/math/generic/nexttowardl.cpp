@@ -13,8 +13,9 @@
 namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(long double, nexttowardl, (long double x, long double y)) {
-  // We can reuse the nextafter implementation because the internal nextafter is
-  // templated on the types of the arguments.
+  // We can reuse the nextafter implementation because nexttoward behaves
+  // exactly same as nextafter in case of long doubles. Also, we have explcitly
+  // handled the special 80-bit long doubles in nextafter implementation.
   return fputil::nextafter(x, y);
 }
 

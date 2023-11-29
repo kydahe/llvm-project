@@ -1074,6 +1074,49 @@ def GenericTaintChecker : Checker<"TaintPropagation">,
   ]>,
   Documentation<HasDocumentation>;
 
+
+def CredentialSourceTrackChecker : Checker<"CredentialSourceTrack">,
+  HelpText<"Track Credential Source Information (how to obtain the credentials)">,
+  CheckerOptions<[
+    CmdLineOption<String,
+                  "Config",
+                  "Specifies the name of the configuration file.",
+                  "",
+                  InAlpha>,
+    CmdLineOption<String,
+                  "DOutput",
+                  "Specifies the name of the debug output file.",
+                  "",
+                  InAlpha>,
+    CmdLineOption<String,
+                  "OOutput",
+                  "Specifies the name of the credential source output file.",
+                  "",
+                  InAlpha>,
+  ]>,
+  Documentation<NotDocumented>;
+
+def CredentialCleanTrackChecker : Checker<"CredentialCleanTrack">,
+  HelpText<"Track Credential Clean Information (how to process the credentials after usage)">,
+  CheckerOptions<[
+    CmdLineOption<String,
+                  "Config",
+                  "Specifies the name of the configuration file.",
+                  "",
+                  InAlpha>,
+    CmdLineOption<String,
+                  "DOutput",
+                  "Specifies the name of the debug output file.",
+                  "",
+                  InAlpha>,
+    CmdLineOption<String,
+                  "OOutput",
+                  "Specifies the name of the credential source output file.",
+                  "",
+                  InAlpha>,
+  ]>,
+  Documentation<NotDocumented>;
+
 } // end "alpha.security.taint"
 
 //===----------------------------------------------------------------------===//

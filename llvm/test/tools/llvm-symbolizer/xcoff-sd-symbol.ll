@@ -16,10 +16,10 @@ entry:
   ret void
 }
 
-; CHECK: .foo
+; CHECK: ??
 ; CHECK: ??:0:0
 ; CHECK-EMPTY:
 
-; CHECK: .foo1
+; CHECK: ??
 ; CHECK: ??:0:0
 ; CHECK-EMPTY:

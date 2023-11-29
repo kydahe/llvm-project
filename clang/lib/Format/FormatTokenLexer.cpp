@@ -253,8 +253,7 @@ void FormatTokenLexer::tryMergePreviousTokens() {
                           TT_BinaryOperator)) {
       return;
     }
-    // Module paths in specify blocks and the implication and boolean equality
-    // operators.
+    // Module paths in specify blocks and implications in properties.
     if (tryMergeTokensAny({{tok::plusequal, tok::greater},
                            {tok::plus, tok::star, tok::greater},
                            {tok::minusequal, tok::greater},
@@ -266,8 +265,7 @@ void FormatTokenLexer::tryMergePreviousTokens() {
                            {tok::pipe, tok::arrow},
                            {tok::hash, tok::minus, tok::hash},
                            {tok::hash, tok::equal, tok::hash}},
-                          TT_BinaryOperator) ||
-        Tokens.back()->is(tok::arrow)) {
+                          TT_BinaryOperator)) {
       Tokens.back()->ForcedPrecedence = prec::Comma;
       return;
     }

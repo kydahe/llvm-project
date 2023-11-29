@@ -15,7 +15,6 @@
 #include "flang/Optimizer/Dialect/FIRType.h"
 #include "flang/Optimizer/Dialect/Support/KindMapping.h"
 #include "flang/Optimizer/Support/FatalError.h"
-#include "flang/Optimizer/Support/Utils.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/TypeRange.h"
 
@@ -43,19 +42,6 @@ static const llvm::fltSemantics &floatToSemantics(const KindMapping &kindMap,
   if (auto ty = type.dyn_cast<fir::RealType>())
     return kindMap.getFloatSemantics(ty.getFKind());
   return type.cast<mlir::FloatType>().getFloatSemantics();
-}
-
-static void typeTodo(const llvm::fltSemantics *sem, mlir::Location loc,
-                     std::string context) {
-  if (sem == &llvm::APFloat::IEEEhalf()) {
-    TODO(loc, "COMPLEX(KIND=2): for " + context + " type");
-  } else if (sem == &llvm::APFloat::BFloat()) {
-    TODO(loc, "COMPLEX(KIND=3): " + context + " type");
-  } else if (sem == &llvm::APFloat::x87DoubleExtended()) {
-    TODO(loc, "COMPLEX(KIND=10): " + context + " type");
-  } else {
-    TODO(loc, "complex for this precision for " + context + " type");
-  }
 }
 
 namespace {
@@ -177,7 +163,7 @@ struct TargetI386 : public GenericTarget<TargetI386> {
       marshal.emplace_back(fir::ReferenceType::get(structTy),
                            AT{/*alignment=*/4, /*byval=*/false, /*sret=*/true});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -236,7 +222,7 @@ struct TargetI386Win : public GenericTarget<TargetI386Win> {
               eleTy.getContext(), mlir::TypeRange{eleTy, eleTy})),
           AT{/*align=*/4, /*byval=*/false, /*sret=*/true});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -272,7 +258,7 @@ struct TargetX86_64 : public GenericTarget<TargetX86_64> {
               eleTy.getContext(), mlir::TypeRange{eleTy, eleTy})),
           AT{/*align=*/16, /*byval=*/true});
     } else {
-      typeTodo(sem, loc, "argument");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -298,7 +284,7 @@ struct TargetX86_64 : public GenericTarget<TargetX86_64> {
               eleTy.getContext(), mlir::TypeRange{eleTy, eleTy})),
           AT{/*align=*/16, /*byval=*/false, /*sret=*/true});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -339,7 +325,7 @@ struct TargetX86_64Win : public GenericTarget<TargetX86_64Win> {
               eleTy.getContext(), mlir::TypeRange{eleTy, eleTy})),
           AT{/*align=*/16, /*byval=*/true});
     } else {
-      typeTodo(sem, loc, "argument");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -368,7 +354,7 @@ struct TargetX86_64Win : public GenericTarget<TargetX86_64Win> {
               eleTy.getContext(), mlir::TypeRange{eleTy, eleTy})),
           AT{/*align=*/16, /*byval=*/false, /*sret=*/true});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -394,7 +380,7 @@ struct TargetAArch64 : public GenericTarget<TargetAArch64> {
       // [2 x t]   array of 2 eleTy
       marshal.emplace_back(fir::SequenceType::get({2}, eleTy), AT{});
     } else {
-      typeTodo(sem, loc, "argument");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -411,7 +397,7 @@ struct TargetAArch64 : public GenericTarget<TargetAArch64> {
                                                 mlir::TypeRange{eleTy, eleTy}),
                            AT{});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -546,7 +532,7 @@ struct TargetSparcV9 : public GenericTarget<TargetSparcV9> {
               eleTy.getContext(), mlir::TypeRange{eleTy, eleTy})),
           AT{/*align=*/16, /*byval=*/true});
     } else {
-      typeTodo(sem, loc, "argument");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -584,7 +570,7 @@ struct TargetRISCV64 : public GenericTarget<TargetRISCV64> {
       marshal.emplace_back(eleTy, AT{});
       marshal.emplace_back(eleTy, AT{});
     } else {
-      typeTodo(sem, loc, "argument");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -601,7 +587,7 @@ struct TargetRISCV64 : public GenericTarget<TargetRISCV64> {
                                                 mlir::TypeRange{eleTy, eleTy}),
                            AT{/*alignment=*/0, /*byval=*/true});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -682,7 +668,7 @@ struct TargetLoongArch64 : public GenericTarget<TargetLoongArch64> {
       marshal.emplace_back(eleTy, AT{});
       marshal.emplace_back(eleTy, AT{});
     } else {
-      typeTodo(sem, loc, "argument");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }
@@ -699,7 +685,7 @@ struct TargetLoongArch64 : public GenericTarget<TargetLoongArch64> {
                                                 mlir::TypeRange{eleTy, eleTy}),
                            AT{/*alignment=*/0, /*byval=*/true});
     } else {
-      typeTodo(sem, loc, "return");
+      TODO(loc, "complex for this precision");
     }
     return marshal;
   }

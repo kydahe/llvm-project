@@ -12,9 +12,8 @@
 #ifndef OMPTARGET_STATE_H
 #define OMPTARGET_STATE_H
 
-#include "Shared/Environment.h"
-
 #include "Debug.h"
+#include "Environment.h"
 #include "Mapping.h"
 #include "Types.h"
 #include "Utils.h"

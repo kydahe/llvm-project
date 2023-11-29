@@ -47,7 +47,9 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "${tmachine}$")
 
         LINK_LIBS
         PRIVATE
-        PluginCommon
+        elf_common
+        MemoryManager
+        PluginInterface
         ${LIBOMPTARGET_DEP_LIBFFI_LIBRARIES}
         ${OPENMP_PTHREAD_LIB}
 
@@ -68,7 +70,6 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "${tmachine}$")
       LIBRARY DESTINATION "${OPENMP_INSTALL_LIBDIR}")
     set_target_properties("omptarget.rtl.${tmachine_libname}" PROPERTIES
       INSTALL_RPATH "$ORIGIN" BUILD_RPATH "$ORIGIN:${CMAKE_CURRENT_BINARY_DIR}/.."
-      POSITION_INDEPENDENT_CODE ON
       CXX_VISIBILITY_PRESET protected)
 
     target_include_directories( "omptarget.rtl.${tmachine_libname}" PRIVATE

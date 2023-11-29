@@ -12,7 +12,6 @@
 #include "src/__support/CPP/bit.h"
 #include "src/__support/UInt128.h"
 #include "src/__support/common.h"
-#include "src/__support/macros/attributes.h" // LIBC_INLINE
 #include "src/__support/macros/properties/architectures.h"
 
 #if !defined(LIBC_TARGET_ARCH_IS_X86)
@@ -104,12 +103,11 @@ template <> struct FPBits<long double> {
     return bool((bits & FloatProp::SIGN_MASK) >> (FloatProp::BIT_WIDTH - 1));
   }
 
-  LIBC_INLINE constexpr FPBits() : bits(0) {}
+  constexpr FPBits() : bits(0) {}
 
   template <typename XType,
             cpp::enable_if_t<cpp::is_same_v<long double, XType>, int> = 0>
-  LIBC_INLINE constexpr explicit FPBits(XType x)
-      : bits(cpp::bit_cast<UIntType>(x)) {
+  constexpr explicit FPBits(XType x) : bits(cpp::bit_cast<UIntType>(x)) {
     // bits starts uninitialized, and setting it to a long double only
     // overwrites the first 80 bits. This clears those upper bits.
     bits = bits & ((UIntType(1) << 80) - 1);
@@ -117,7 +115,7 @@ template <> struct FPBits<long double> {
 
   template <typename XType,
             cpp::enable_if_t<cpp::is_same_v<XType, UIntType>, int> = 0>
-  LIBC_INLINE constexpr explicit FPBits(XType x) : bits(x) {}
+  constexpr explicit FPBits(XType x) : bits(x) {}
 
   LIBC_INLINE constexpr operator long double() {
     return cpp::bit_cast<long double>(bits);

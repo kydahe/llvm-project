@@ -1728,15 +1728,13 @@ ProgramStateRef MallocChecker::MallocMemAux(CheckerContext &C,
     return nullptr;
 
   // Bind the return value to the symbolic value from the heap region.
-  // TODO: move use of this functions to an EvalCall callback, becasue
-  // BindExpr() should'nt be used elsewhere.
+  // TODO: We could rewrite post visit to eval call; 'malloc' does not have
+  // side effects other than what we model here.
   unsigned Count = C.blockCount();
-  SValBuilder &SVB = C.getSValBuilder();
+  SValBuilder &svalBuilder = C.getSValBuilder();
   const LocationContext *LCtx = C.getPredecessor()->getLocationContext();
-  DefinedSVal RetVal =
-      ((Family == AF_Alloca) ? SVB.getAllocaRegionVal(CE, LCtx, Count)
-                             : SVB.getConjuredHeapSymbolVal(CE, LCtx, Count)
-                                   .castAs<DefinedSVal>());
+  DefinedSVal RetVal = svalBuilder.getConjuredHeapSymbolVal(CE, LCtx, Count)
+      .castAs<DefinedSVal>();
   State = State->BindExpr(CE, C.getLocationContext(), RetVal);
 
   // Fill the region with the initialization value.
@@ -1748,7 +1746,7 @@ ProgramStateRef MallocChecker::MallocMemAux(CheckerContext &C,
 
   // Set the region's extent.
   State = setDynamicExtent(State, RetVal.getAsRegion(),
-                           Size.castAs<DefinedOrUnknownSVal>(), SVB);
+                           Size.castAs<DefinedOrUnknownSVal>(), svalBuilder);
 
   return MallocUpdateRefState(C, CE, State, Family);
 }

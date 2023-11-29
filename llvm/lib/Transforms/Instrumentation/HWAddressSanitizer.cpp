@@ -1217,8 +1217,10 @@ Value *HWAddressSanitizer::getHwasanThreadSlotPtr(IRBuilder<> &IRB, Type *Ty) {
     // in Bionic's libc/private/bionic_tls.h.
     Function *ThreadPointerFunc =
         Intrinsic::getDeclaration(M, Intrinsic::thread_pointer);
-    return IRB.CreateConstGEP1_32(Int8Ty, IRB.CreateCall(ThreadPointerFunc),
-                                  0x30);
+    Value *SlotPtr = IRB.CreatePointerCast(
+        IRB.CreateConstGEP1_32(Int8Ty, IRB.CreateCall(ThreadPointerFunc), 0x30),
+        Ty->getPointerTo(0));
+    return SlotPtr;
   }
   if (ThreadPtrGlobal)
     return ThreadPtrGlobal;
@@ -1303,8 +1305,8 @@ void HWAddressSanitizer::emitPrologue(IRBuilder<> &IRB, bool WithFrameRecord) {
 
       // Store data to ring buffer.
       Value *FrameRecordInfo = getFrameRecordInfo(IRB);
-      Value *RecordPtr =
-          IRB.CreateIntToPtr(ThreadLongMaybeUntagged, IRB.getPtrTy(0));
+      Value *RecordPtr = IRB.CreateIntToPtr(ThreadLongMaybeUntagged,
+                                            IntptrTy->getPointerTo(0));
       IRB.CreateStore(FrameRecordInfo, RecordPtr);
 
       // Update the ring buffer. Top byte of ThreadLong defines the size of the

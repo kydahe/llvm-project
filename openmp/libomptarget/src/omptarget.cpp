@@ -12,16 +12,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "omptarget.h"
-#include "OpenMP/OMPT/Callback.h"
-#include "OpenMP/OMPT/Interface.h"
+#include "OmptCallback.h"
+#include "OmptInterface.h"
 #include "device.h"
 #include "private.h"
 #include "rtl.h"
-
-#include "Shared/Profile.h"
-
-#include "OpenMP/Mapping.h"
-#include "OpenMP/omp.h"
 
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/bit.h"
@@ -76,7 +71,7 @@ int32_t AsyncInfoTy::runPostProcessing() {
 
   // Clear the vector up until the last known function, since post-processing
   // procedures might add new procedures themselves.
-  const auto *PrevBegin = PostProcessingFunctions.begin();
+  const auto PrevBegin = PostProcessingFunctions.begin();
   PostProcessingFunctions.erase(PrevBegin, PrevBegin + Size);
 
   return OFFLOAD_SUCCESS;
@@ -302,8 +297,8 @@ void handleTargetOutcome(bool Success, ident_t *Loc) {
       if (PM->RTLs.UsedRTLs.empty()) {
         llvm::SmallVector<llvm::StringRef> Archs;
         llvm::transform(PM->Images, std::back_inserter(Archs),
-                        [](const auto &X) {
-                          return !X.second.Arch ? "empty" : X.second.Arch;
+                        [](const auto &x) {
+                          return !x.second.Arch ? "empty" : x.second.Arch;
                         });
         FAILURE_MESSAGE(
             "No images found compatible with the installed hardware. ");
@@ -478,7 +473,7 @@ void *targetLockExplicit(void *HostPtr, size_t Size, int DeviceNum,
     return NULL;
   }
 
-  void *RC = NULL;
+  void *rc = NULL;
 
   if (!deviceIsReady(DeviceNum)) {
     DP("%s returns NULL ptr\n", Name);
@@ -497,16 +492,16 @@ void *targetLockExplicit(void *HostPtr, size_t Size, int DeviceNum,
     DevicePtr = PM->Devices[DeviceNum].get();
   }
 
-  int32_t Err = 0;
+  int32_t err = 0;
   if (DevicePtr->RTL->data_lock) {
-    Err = DevicePtr->RTL->data_lock(DeviceNum, HostPtr, Size, &RC);
-    if (Err) {
+    err = DevicePtr->RTL->data_lock(DeviceNum, HostPtr, Size, &rc);
+    if (err) {
       DP("Could not lock ptr %p\n", HostPtr);
       return nullptr;
     }
   }
-  DP("%s returns device ptr " DPxMOD "\n", Name, DPxPTR(RC));
-  return RC;
+  DP("%s returns device ptr " DPxMOD "\n", Name, DPxPTR(rc));
+  return rc;
 }
 
 void targetUnlockExplicit(void *HostPtr, int DeviceNum, const char *Name) {
@@ -1269,7 +1264,7 @@ class PrivateArgumentManagerTy {
 
     FirstPrivateArgInfoTy(int Index, void *HstPtr, uint32_t Size,
                           uint32_t Alignment, uint32_t Padding,
-                          map_var_info_t HstPtrName = nullptr)
+                          const map_var_info_t HstPtrName = nullptr)
         : HstPtrBegin(reinterpret_cast<char *>(HstPtr)),
           HstPtrEnd(HstPtrBegin + Size), Index(Index), Alignment(Alignment),
           Size(Size), Padding(Padding), HstPtrName(HstPtrName) {}
@@ -1303,7 +1298,7 @@ public:
   /// Add a private argument
   int addArg(void *HstPtr, int64_t ArgSize, int64_t ArgOffset,
              bool IsFirstPrivate, void *&TgtPtr, int TgtArgsIndex,
-             map_var_info_t HstPtrName = nullptr,
+             const map_var_info_t HstPtrName = nullptr,
              const bool AllocImmediately = false) {
     // If the argument is not first-private, or its size is greater than a
     // predefined threshold, we will allocate memory and issue the transfer
@@ -1390,7 +1385,7 @@ public:
       assert(FirstPrivateArgSize != 0 &&
              "FirstPrivateArgSize is 0 but FirstPrivateArgInfo is empty");
       FirstPrivateArgBuffer.resize(FirstPrivateArgSize, 0);
-      auto *Itr = FirstPrivateArgBuffer.begin();
+      auto Itr = FirstPrivateArgBuffer.begin();
       // Copy all host data to this buffer
       for (FirstPrivateArgInfoTy &Info : FirstPrivateArgInfo) {
         // First pad the pointer as we (have to) pad it on the device too.
@@ -1730,10 +1725,10 @@ int target(ident_t *Loc, DeviceTy &Device, void *HostPtr,
 /// and informing the record-replayer of whether to store the output
 /// in some file.
 int target_activate_rr(DeviceTy &Device, uint64_t MemorySize, void *VAddr,
-                       bool IsRecord, bool SaveOutput,
+                       bool isRecord, bool SaveOutput,
                        uint64_t &ReqPtrArgOffset) {
   return Device.RTL->activate_record_replay(Device.DeviceID, MemorySize, VAddr,
-                                            IsRecord, SaveOutput,
+                                            isRecord, SaveOutput,
                                             ReqPtrArgOffset);
 }
 

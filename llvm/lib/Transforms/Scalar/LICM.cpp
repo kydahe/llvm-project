@@ -2493,7 +2493,7 @@ static bool hoistGEP(Instruction &I, Loop &L, ICFLoopSafetyInfo &SafetyInfo,
   // handle both offsets being non-negative.
   const DataLayout &DL = GEP->getModule()->getDataLayout();
   auto NonNegative = [&](Value *V) {
-    return isKnownNonNegative(V, SimplifyQuery(DL, DT, AC, GEP));
+    return isKnownNonNegative(V, DL, 0, AC, GEP, DT);
   };
   bool IsInBounds = Src->isInBounds() && GEP->isInBounds() &&
                     all_of(Src->indices(), NonNegative) &&

@@ -621,7 +621,7 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
     std::unique_ptr<ASTUnit> AST = ASTUnit::LoadFromASTFile(
         std::string(InputFile), CI.getPCHContainerReader(),
         ASTUnit::LoadPreprocessorOnly, ASTDiags, CI.getFileSystemOpts(),
-        /*HeaderSearchOptions=*/nullptr);
+        /*HeaderSearchOptions=*/nullptr, CI.getCodeGenOpts().DebugTypeExtRefs);
     if (!AST)
       return false;
 
@@ -689,7 +689,8 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
     std::unique_ptr<ASTUnit> AST = ASTUnit::LoadFromASTFile(
         std::string(InputFile), CI.getPCHContainerReader(),
         ASTUnit::LoadEverything, Diags, CI.getFileSystemOpts(),
-        CI.getHeaderSearchOptsPtr());
+        CI.getHeaderSearchOptsPtr(),
+        CI.getCodeGenOpts().DebugTypeExtRefs);
 
     if (!AST)
       return false;

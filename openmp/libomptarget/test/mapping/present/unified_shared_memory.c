@@ -12,7 +12,7 @@
 int main() {
   int i;
 
-  // CHECK-NOT: omptarget
+  // CHECK-NOT: Libomptarget
 #pragma omp target data map(alloc : i)
 #pragma omp target map(present, alloc : i)
   ;
@@ -20,7 +20,7 @@ int main() {
   // CHECK: i is present
   fprintf(stderr, "i is present\n");
 
-  // CHECK-NOT: omptarget
+  // CHECK-NOT: Libomptarget
 #pragma omp target map(present, alloc : i)
   ;
 

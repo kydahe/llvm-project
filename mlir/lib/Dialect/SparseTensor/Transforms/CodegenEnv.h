@@ -77,10 +77,10 @@ public:
   const TensorExp &exp(ExprId e) const { return latticeMerger.exp(e); }
   const LatPoint &lat(LatPointId l) const { return latticeMerger.lat(l); }
   ArrayRef<LatPointId> set(LatSetId s) const { return latticeMerger.set(s); }
-  LevelType lt(TensorId t, LoopId i) const {
+  DimLevelType lt(TensorId t, LoopId i) const {
     return latticeMerger.getLvlType(t, i);
   }
-  LevelType lt(TensorLoopId b) const { return latticeMerger.getLvlType(b); }
+  DimLevelType lt(TensorLoopId b) const { return latticeMerger.getLvlType(b); }
 
   unsigned getLoopNum() const { return latticeMerger.getNumLoops(); }
 

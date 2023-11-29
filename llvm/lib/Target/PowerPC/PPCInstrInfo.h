@@ -531,8 +531,7 @@ public:
   /// adjacent.
   bool shouldClusterMemOps(ArrayRef<const MachineOperand *> BaseOps1,
                            ArrayRef<const MachineOperand *> BaseOps2,
-                           unsigned ClusterSize,
-                           unsigned NumBytes) const override;
+                           unsigned NumLoads, unsigned NumBytes) const override;
 
   /// Return true if two MIs access different memory addresses and false
   /// otherwise

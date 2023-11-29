@@ -19,7 +19,7 @@
 #  pragma GCC system_header
 #endif
 
-#if _LIBCPP_STD_VER >= 17
+#ifndef _LIBCPP_CXX03_LANG
 
 _LIBCPP_BEGIN_NAMESPACE_FILESYSTEM
 
@@ -71,6 +71,6 @@ private:
 
 _LIBCPP_END_NAMESPACE_FILESYSTEM
 
-#endif // _LIBCPP_STD_VER >= 17
+#endif // _LIBCPP_CXX03_LANG
 
 #endif // _LIBCPP___FILESYSTEM_FILE_STATUS_H

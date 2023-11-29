@@ -13,8 +13,7 @@
 #ifndef OMPTARGET_CONFIGURATION_H
 #define OMPTARGET_CONFIGURATION_H
 
-#include "Shared/Environment.h"
-
+#include "Environment.h"
 #include "Types.h"
 
 namespace ompx {

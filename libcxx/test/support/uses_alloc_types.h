@@ -122,6 +122,16 @@ using EnableIfB = typename std::enable_if<Value, bool>::type;
 
 } // end namespace detail
 
+// FIXME: UsesAllocatorTestBase needs some special logic to deal with
+// polymorphic allocators. However we don't want to include
+// <experimental/memory_resource> in this header. Therefore in order
+// to inject this behavior later we use a trait.
+// See test_memory_resource.h for more info.
+template <class Alloc>
+struct TransformErasedTypeAlloc {
+  using type = Alloc;
+};
+
 using detail::EnableIfB;
 
 struct AllocLastTag {};
@@ -159,7 +169,7 @@ struct UsesAllocatorTestBaseStorage<Alloc, false> {
 template <class Self, class Alloc>
 struct UsesAllocatorTestBase {
 public:
-  using CtorAlloc = Alloc;
+  using CtorAlloc = typename TransformErasedTypeAlloc<Alloc>::type;
 
   template <class... ArgTypes>
   bool checkConstruct(UsesAllocatorType expectType) const {

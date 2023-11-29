@@ -45,8 +45,9 @@ static bool isZeroValue(Value val) {
 // Helper to detect a sparse tensor type operand.
 static bool isSparseTensor(Value v) {
   auto enc = getSparseTensorEncoding(v.getType());
-  return enc && !llvm::all_of(enc.getLvlTypes(),
-                              [](auto lt) { return lt == LevelType::Dense; });
+  return enc && !llvm::all_of(enc.getLvlTypes(), [](auto lt) {
+           return lt == DimLevelType::Dense;
+         });
 }
 static bool isSparseTensor(OpOperand *op) { return isSparseTensor(op->get()); }
 
@@ -132,9 +133,15 @@ static void sizesForTensor(OpBuilder &builder, SmallVectorImpl<Value> &sizes,
   }
 }
 
+// TODO: The dim level property of the COO type relies on input tensors, the
+// shape relies on the output tensor
+static RankedTensorType getCOOType(const SparseTensorType &stt, bool ordered) {
+  return getCOOFromTypeWithOrdering(stt, stt.getDimToLvl(), ordered);
+}
+
 static RankedTensorType getBufferType(const SparseTensorType &stt,
                                       bool needTmpCOO) {
-  return needTmpCOO ? stt.getCOOType(/*ordered=*/false)
+  return needTmpCOO ? getCOOType(stt, /*ordered=*/false)
                     : stt.getRankedTensorType();
 }
 
@@ -654,7 +661,8 @@ public:
           SmallVector<Value> srcDcvs;
           srcDcvs.reserve(srcRank);
           for (Dimension d = 0; d < srcRank; d++) {
-            Level lvl = toLvl(encSrc, d);
+            // FIXME: `toStoredDim` is deprecated
+            Level lvl = toStoredDim(encSrc, d);
             srcDcvs.push_back(srcLcvs[lvl]);
           }
 
@@ -758,7 +766,8 @@ public:
           SmallVector<Value> srcDcvs;
           srcDcvs.reserve(dimRank);
           for (Dimension d = 0; d < dimRank; d++) {
-            Level lvl = toLvl(encSrc, d);
+            // FIXME: `toStoredDim` is deprecated
+            Level lvl = toStoredDim(encSrc, d);
             srcDcvs.push_back(srcLcvs[lvl]);
           }
           SmallVector<Value> dstDcvs;
@@ -863,8 +872,9 @@ struct SparseTensorDimOpRewriter : public OpRewritePattern<tensor::DimOp> {
       return failure();
 
     if (stt.isPermutation()) {
+      // FIXME: `toStoredDim` is deprecated
       rewriter.replaceOpWithNewOp<LvlOp>(op, op.getSource(),
-                                         toLvl(stt.getEncoding(), *dim));
+                                         toStoredDim(stt.getEncoding(), *dim));
       return success();
     }
 
@@ -1189,7 +1199,7 @@ struct NewRewriter : public OpRewritePattern<NewOp> {
     //   %t = sparse_tensor.convert %orderedCoo
     // with enveloping reinterpreted_map ops for non-permutations.
     RankedTensorType dstTp = stt.getRankedTensorType();
-    RankedTensorType cooTp = stt.getCOOType(/*ordered=*/true);
+    RankedTensorType cooTp = getCOOType(dstTp, /*ordered=*/true);
     Value cooTensor = rewriter.create<NewOp>(loc, cooTp, op.getSource());
     Value convert = cooTensor;
     if (!stt.isPermutation()) { // demap coo, demap dstTp

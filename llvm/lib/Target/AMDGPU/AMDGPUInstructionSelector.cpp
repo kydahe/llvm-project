@@ -4103,9 +4103,7 @@ AMDGPUInstructionSelector::selectFlatOffsetImpl(MachineOperand &Root,
   int64_t ConstOffset;
   std::tie(PtrBase, ConstOffset) =
       getPtrBaseWithConstantOffset(Root.getReg(), *MRI);
-
-  if (ConstOffset == 0 || (FlatVariant == SIInstrFlags::FlatScratch &&
-                           !isFlatScratchBaseLegal(Root.getReg())))
+  if (ConstOffset == 0 || !isFlatScratchBaseLegal(PtrBase, FlatVariant))
     return Default;
 
   unsigned AddrSpace = (*MI->memoperands_begin())->getAddrSpace();
@@ -4268,7 +4266,7 @@ AMDGPUInstructionSelector::selectScratchSAddr(MachineOperand &Root) const {
   // possible.
   std::tie(PtrBase, ConstOffset) = getPtrBaseWithConstantOffset(Addr, *MRI);
 
-  if (ConstOffset != 0 && isFlatScratchBaseLegal(Addr) &&
+  if (ConstOffset != 0 && isFlatScratchBaseLegal(PtrBase) &&
       TII.isLegalFLATOffset(ConstOffset, AMDGPUAS::PRIVATE_ADDRESS,
                             SIInstrFlags::FlatScratch)) {
     Addr = PtrBase;
@@ -4345,7 +4343,6 @@ AMDGPUInstructionSelector::selectScratchSVAddr(MachineOperand &Root) const {
   // possible.
   std::tie(PtrBase, ConstOffset) = getPtrBaseWithConstantOffset(Addr, *MRI);
 
-  Register OrigAddr = Addr;
   if (ConstOffset != 0 &&
       TII.isLegalFLATOffset(ConstOffset, AMDGPUAS::PRIVATE_ADDRESS, true)) {
     Addr = PtrBase;
@@ -4363,13 +4360,8 @@ AMDGPUInstructionSelector::selectScratchSVAddr(MachineOperand &Root) const {
   Register LHS = AddrDef->MI->getOperand(1).getReg();
   auto LHSDef = getDefSrcRegIgnoringCopies(LHS, *MRI);
 
-  if (OrigAddr != Addr) {
-    if (!isFlatScratchBaseLegalSVImm(OrigAddr))
-      return std::nullopt;
-  } else {
-    if (!isFlatScratchBaseLegalSV(OrigAddr))
-      return std::nullopt;
-  }
+  if (!isFlatScratchBaseLegal(LHS) || !isFlatScratchBaseLegal(RHS))
+    return std::nullopt;
 
   if (checkFlatScratchSVSSwizzleBug(RHS, LHS, ImmOffset))
     return std::nullopt;
@@ -4502,78 +4494,14 @@ bool AMDGPUInstructionSelector::isDSOffset2Legal(Register Base, int64_t Offset0,
   return KB->signBitIsZero(Base);
 }
 
-// Return whether the operation has NoUnsignedWrap property.
-static bool isNoUnsignedWrap(MachineInstr *Addr) {
-  return Addr->getOpcode() == TargetOpcode::G_OR ||
-         (Addr->getOpcode() == TargetOpcode::G_PTR_ADD &&
-          Addr->getFlag(MachineInstr::NoUWrap));
-}
-
-// Check that the base address of flat scratch load/store in the form of `base +
-// offset` is legal to be put in SGPR/VGPR (i.e. unsigned per hardware
-// requirement). We always treat the first operand as the base address here.
-bool AMDGPUInstructionSelector::isFlatScratchBaseLegal(Register Addr) const {
-  MachineInstr *AddrMI = getDefIgnoringCopies(Addr, *MRI);
-
-  if (isNoUnsignedWrap(AddrMI))
+bool AMDGPUInstructionSelector::isFlatScratchBaseLegal(
+    Register Base, uint64_t FlatVariant) const {
+  if (FlatVariant != SIInstrFlags::FlatScratch)
     return true;
 
-  Register LHS = AddrMI->getOperand(1).getReg();
-  Register RHS = AddrMI->getOperand(2).getReg();
-
-  if (AddrMI->getOpcode() == TargetOpcode::G_PTR_ADD) {
-    std::optional<ValueAndVReg> RhsValReg =
-        getIConstantVRegValWithLookThrough(RHS, *MRI);
-    // If the immediate offset is negative and within certain range, the base
-    // address cannot also be negative. If the base is also negative, the sum
-    // would be either negative or much larger than the valid range of scratch
-    // memory a thread can access.
-    if (RhsValReg && RhsValReg->Value.getSExtValue() < 0 &&
-        RhsValReg->Value.getSExtValue() > -0x40000000)
-      return true;
-  }
-
-  return KB->signBitIsZero(LHS);
-}
-
-// Check address value in SGPR/VGPR are legal for flat scratch in the form
-// of: SGPR + VGPR.
-bool AMDGPUInstructionSelector::isFlatScratchBaseLegalSV(Register Addr) const {
-  MachineInstr *AddrMI = getDefIgnoringCopies(Addr, *MRI);
-
-  if (isNoUnsignedWrap(AddrMI))
-    return true;
-
-  Register LHS = AddrMI->getOperand(1).getReg();
-  Register RHS = AddrMI->getOperand(2).getReg();
-  return KB->signBitIsZero(RHS) && KB->signBitIsZero(LHS);
-}
-
-// Check address value in SGPR/VGPR are legal for flat scratch in the form
-// of: SGPR + VGPR + Imm.
-bool AMDGPUInstructionSelector::isFlatScratchBaseLegalSVImm(
-    Register Addr) const {
-  MachineInstr *AddrMI = getDefIgnoringCopies(Addr, *MRI);
-  Register Base = AddrMI->getOperand(1).getReg();
-  std::optional<DefinitionAndSourceRegister> BaseDef =
-      getDefSrcRegIgnoringCopies(Base, *MRI);
-  std::optional<ValueAndVReg> RHSOffset =
-      getIConstantVRegValWithLookThrough(AddrMI->getOperand(2).getReg(), *MRI);
-  assert(RHSOffset);
-
-  // If the immediate offset is negative and within certain range, the base
-  // address cannot also be negative. If the base is also negative, the sum
-  // would be either negative or much larger than the valid range of scratch
-  // memory a thread can access.
-  if (isNoUnsignedWrap(BaseDef->MI) &&
-      (isNoUnsignedWrap(AddrMI) ||
-       (RHSOffset->Value.getSExtValue() < 0 &&
-        RHSOffset->Value.getSExtValue() > -0x40000000)))
-    return true;
-
-  Register LHS = BaseDef->MI->getOperand(1).getReg();
-  Register RHS = BaseDef->MI->getOperand(2).getReg();
-  return KB->signBitIsZero(RHS) && KB->signBitIsZero(LHS);
+  // When value in 32-bit Base can be negative calculate scratch offset using
+  // 32-bit add instruction, otherwise use Base(unsigned) + offset.
+  return KB->signBitIsZero(Base);
 }
 
 bool AMDGPUInstructionSelector::isUnneededShiftMask(const MachineInstr &MI,

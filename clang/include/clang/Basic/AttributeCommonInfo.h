@@ -177,7 +177,6 @@ public:
                 IsRegularKeywordAttribute);
   }
   const IdentifierInfo *getAttrName() const { return AttrName; }
-  void setAttrName(const IdentifierInfo *AttrNameII) { AttrName = AttrNameII; }
   SourceLocation getLoc() const { return AttrRange.getBegin(); }
   SourceRange getRange() const { return AttrRange; }
   void setRange(SourceRange R) { AttrRange = R; }

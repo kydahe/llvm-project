@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 //
 /// \file Utility functions used by both Combiner backends.
+/// TODO: Can remove when MatchDAG-based backend is removed.
 //
 //===----------------------------------------------------------------------===//
 

@@ -81,7 +81,7 @@ void test() {
 int main(int, char**) {
   test<int>();
   test<unsigned>();
-  test<signed char>();
+  test<char>();
   test<long long>();
   test<size_t>();
   return 0;

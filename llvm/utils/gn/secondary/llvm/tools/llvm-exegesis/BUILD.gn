@@ -4,7 +4,9 @@ executable("llvm-exegesis") {
   deps = [
     "lib",
     "//llvm/lib/CodeGen",
-    "//llvm/lib/DebugInfo/Symbolize",
+    "//llvm/lib/CodeGen",
+    "//llvm/lib/ExecutionEngine",
+    "//llvm/lib/ExecutionEngine/MCJIT",
     "//llvm/lib/MC",
     "//llvm/lib/Object",
     "//llvm/lib/Support",

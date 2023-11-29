@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14
+// UNSUPPORTED: c++03
 // UNSUPPORTED: availability-filesystem-missing
 
 // These tests require locale for non-char paths
@@ -24,7 +24,8 @@
 // template <class InputIterator>
 //      path& append(InputIterator first, InputIterator last);
 
-#include <filesystem>
+
+#include "filesystem_include.h"
 #include <type_traits>
 #include <string_view>
 #include <cassert>
@@ -38,7 +39,6 @@
 #include "make_string.h"
 #include "test_iterators.h"
 #include "test_macros.h"
-namespace fs = std::filesystem;
 
 struct AppendOperatorTestcase {
   MultiStringType lhs;

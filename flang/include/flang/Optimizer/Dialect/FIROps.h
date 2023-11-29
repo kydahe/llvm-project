@@ -38,6 +38,10 @@ mlir::ParseResult parseSelector(mlir::OpAsmParser &parser,
                                 mlir::OpAsmParser::UnresolvedOperand &selector,
                                 mlir::Type &type);
 
+static constexpr llvm::StringRef getAdaptToByRefAttrName() {
+  return "adapt.valuebyref";
+}
+
 static constexpr llvm::StringRef getNormalizedLowerBoundAttrName() {
   return "normalized.lb";
 }

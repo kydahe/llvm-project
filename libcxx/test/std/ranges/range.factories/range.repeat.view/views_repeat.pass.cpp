@@ -11,7 +11,7 @@
 // template <class T>
 // views::repeat(T &&) requires constructible_from<ranges::repeat_view<T>, T>;
 
-// template <class T, class Bound>
+// templaye <class T, class Bound>
 // views::repeat(T &&, Bound &&) requires constructible_from<ranges::repeat_view<T, Bound>, T, Bound>;
 
 #include <cassert>

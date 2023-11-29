@@ -930,11 +930,7 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
   // and FP constants (specifically, the 'pp-number' regex), and assumes that
   // the byte at "*end" is both valid and not part of the regex.  Because of
   // this, it doesn't have to check for 'overscan' in various places.
-  // Note: For HLSL, the end token is allowed to be '.' which would be in the
-  // 'pp-number' regex. This is required to support vector swizzles on numeric
-  // constants (i.e. 1.xx or 1.5f.rrr).
-  if (isPreprocessingNumberBody(*ThisTokEnd) &&
-      !(LangOpts.HLSL && *ThisTokEnd == '.')) {
+  if (isPreprocessingNumberBody(*ThisTokEnd)) {
     Diags.Report(TokLoc, diag::err_lexing_numeric);
     hadError = true;
     return;
